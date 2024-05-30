@@ -1,0 +1,4 @@
+name: SimpleCells
+version: '${version}'
+main: moe.krp.simplecells.SimpleCells
+api-version: '1.18'
