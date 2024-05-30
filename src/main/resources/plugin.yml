@@ -2,3 +2,30 @@ name: SimpleCells
 version: '${version}'
 main: moe.krp.simplecells.SimpleCells
 api-version: '1.18'
+depend:
+  - WorldEdit
+  - Vault
+commands:
+  simplecells:
+    aliases: [sc, simplec, scells]
+    description: SimpleCells base command
+    usage: /<command> [subcommand]
+permissions:
+  simplecells.*:
+    description: SimpleCells base permission
+    children:
+      simplecells.create:
+        description: Allows player to create a new cell definition
+      simplecells.delete:
+        description: Allows player to delete a cell definition
+      simplecells.info:
+        description: Allows player to view information about a cell definition
+      simplecells.sign:
+        description: Allows player to create, modify, or delete a cell sign
+        children:
+            simplecells.sign.create:
+                description: Allows player to create a cell sign
+            simplecells.sign.modify:
+                description: Allows player to modify a cell sign
+            simplecells.sign.delete:
+                description: Allows player to delete a cell sign
