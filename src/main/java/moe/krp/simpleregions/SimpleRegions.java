@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,7 +37,9 @@ public final class SimpleRegions extends JavaPlugin {
     @Override
     public void onDisable() {
         Bukkit.getScheduler().cancelTasks(this);
+        log("Cleaning up dirty storage.");
         storageManager.cleanUpDirtyStorage();
+        log("SimpleRegions has been disabled.");
     }
 
     private void loadInMemoryStores() {
@@ -61,6 +64,13 @@ public final class SimpleRegions extends JavaPlugin {
                 0,
                 40 // 20 * 2
         );
+        Bukkit.getScheduler().runTaskTimer(
+                this,
+                () -> storageManager.tickSigns(Duration.ofSeconds(1)),
+                0,
+                20
+        );
+
         log("Tasks set up");
     }
 

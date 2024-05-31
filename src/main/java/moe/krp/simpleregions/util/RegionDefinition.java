@@ -10,6 +10,7 @@ import java.util.UUID;
 public class RegionDefinition {
     private String name;
     private String regionType;
+    private String world;
     private Vec3D lowerBound;
     private Vec3D upperBound;
     private UUID ownedBy;
@@ -22,6 +23,7 @@ public class RegionDefinition {
 
     public RegionDefinition(String name, Vec3D lowerBound, Vec3D upperBound, UUID creator, final String regionType) {
         this.name = name;
+        this.world = lowerBound.getWorld(); // these should be the same
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
         this.creator = creator;

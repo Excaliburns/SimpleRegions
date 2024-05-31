@@ -2,6 +2,7 @@ package moe.krp.simpleregions.util;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import lombok.Data;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 @Data
@@ -23,5 +24,9 @@ public class Vec3D {
         this.y = point.getY();
         this.z = point.getZ();
         this.world = world;
+    }
+
+    public Location toLocation() {
+        return new Location(Bukkit.getWorld(world), x, y, z);
     }
 }

@@ -7,12 +7,22 @@ import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.util.RegionDefinition;
 import moe.krp.simpleregions.util.SignDefinition;
 import moe.krp.simpleregions.util.Vec3D;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Sign;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -140,6 +150,67 @@ public class StorageManager {
             }
         }
         saveRegions(RegionsToSave);
+    }
+
+    public void setRegionOwned(
+            final String regionName,
+            final UUID owner
+    ) {
+        final Player player = Bukkit.getPlayer(owner);
+        if (player == null) {
+            SimpleRegions.log(Level.INFO, "Player not found during signage update for region " + regionName + ".");
+            SimpleRegions.log("Player UUID: " + owner);
+            return;
+        }
+
+        final RegionDefinition region = getRegion(regionName);
+        if (region == null) {
+            SimpleRegions.log(Level.INFO, "Region " + regionName + " not found during signage update.");
+            return;
+        }
+
+        final BlockState blockState = getSignBlockStateForRegion(region);
+        if (blockState instanceof Sign signBlock) {
+            signBlock.line(1, Component.text("Owned By:"));
+            signBlock.line(2, Component.text(player.getName()));
+            signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
+            signBlock.update();
+        }
+
+        region.setOwnedBy(owner);
+        region.setDirty(true);
+    }
+
+    public void tickSigns(final Duration duration) {
+        allRegions.forEach( region -> {
+            if (region.getOwnedBy() == null) {
+                return;
+            }
+
+            final BlockState blockState = getSignBlockStateForRegion(region);
+            if (blockState instanceof Sign signBlock) {
+                final SignDefinition sign = region.getRelatedSign();
+                sign.tickDownTime(duration);
+                signBlock.line(3, Component.text(sign.getDuration()));
+                signBlock.update();
+                region.setDirty(true);
+            }
+        });
+    }
+
+    private BlockState getSignBlockStateForRegion(final RegionDefinition region) {
+        final SignDefinition sign = region.getRelatedSign();
+        if (sign == null) {
+            return null;
+        }
+        final Server server = Bukkit.getServer();
+        final World world = server.getWorld(region.getWorld());
+        if (world == null) {
+            SimpleRegions.log("World was null for the sign of region "+ region.getName() + " at " + sign.getLocation().toString());
+            return null;
+        }
+        final Block block = world.getBlockAt(sign.getLocation().toLocation());
+        return block.getState();
     }
 
     private void saveRegions(Set<RegionDefinition> RegionsToSave) {
