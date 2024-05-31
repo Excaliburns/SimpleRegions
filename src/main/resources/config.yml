@@ -1,1 +1,19 @@
-sign-line-zero: '[SimpleCells]'
+sign-line-zero: '[SimpleRegions]'
+region-types:
+  - PrisonCell
+  - BlackMarket
+  - Courtyard-Small
+  - Courtyard-Large
+region-type-configuration:
+  PrisonCell:
+    remove-items-on-expiry: false
+  BlackMarket:
+    remove-items-on-expiry: true
+  CourtYard-Small:
+    upkeep: true
+    upkeep-interval: 1d
+    upkeep-cost: 1000
+  CourtYard-Large:
+    upkeep: true
+    upkeep-interval: 1d
+    upkeep-cost: 25000

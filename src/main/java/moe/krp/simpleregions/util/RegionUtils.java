@@ -1,4 +1,4 @@
-package moe.krp.simplecells.util;
+package moe.krp.simpleregions.util;
 
 import org.bukkit.Location;
 import org.bukkit.World;

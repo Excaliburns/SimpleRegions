@@ -1,7 +1,7 @@
-package moe.krp.simplecells.visualization;
+package moe.krp.simpleregions.visualization;
 
-import moe.krp.simplecells.SimpleCells;
-import moe.krp.simplecells.util.CellDefinition;
+import moe.krp.simpleregions.SimpleRegions;
+import moe.krp.simpleregions.util.RegionDefinition;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -12,17 +12,17 @@ import java.util.UUID;
 public class VisualizationManager {
     private static final Set<UUID> playersVisualizingSet = new HashSet<>();
 
-    public static void displayVisualizationForCell(
+    public static void displayVisualizationForregion(
             final Player player,
-            final CellDefinition definition
+            final RegionDefinition definition
     ) {
         synchronized (playersVisualizingSet) {
             if (playersVisualizingSet.contains(player.getUniqueId())) {
-                player.sendMessage("You are already visualizing a cell");
+                player.sendMessage("You are already visualizing a region");
                 return;
             }
 
-            player.sendMessage("Visualizing cell " + definition.getName() + " for 7 seconds");
+            player.sendMessage("Visualizing region " + definition.getName() + " for 7 seconds");
             playersVisualizingSet.add(player.getUniqueId());
             new BukkitRunnable() {
                 final VisualizationRunnable visualizationRunnable = new VisualizationRunnable(
@@ -39,11 +39,11 @@ public class VisualizationManager {
                     if (visualizationRunnable.getTimerCounter() > visualizationRunnable.getTimerLimit()) {
                         visualizationRunnable.cancel();
                         playersVisualizingSet.remove(player.getUniqueId());
-                        player.sendMessage("Stopped visualizing cell " + definition.getName());
+                        player.sendMessage("Stopped visualizing region " + definition.getName());
                         this.cancel();
                     }
                 }
-            }.runTaskTimer(SimpleCells.getInstance(), 0, 20);
+            }.runTaskTimer(SimpleRegions.getInstance(), 0, 20);
         }
     }
 }

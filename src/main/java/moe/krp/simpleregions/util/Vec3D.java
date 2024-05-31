@@ -1,4 +1,4 @@
-package moe.krp.simplecells.util;
+package moe.krp.simpleregions.util;
 
 import com.sk89q.worldedit.math.BlockVector3;
 import lombok.Data;

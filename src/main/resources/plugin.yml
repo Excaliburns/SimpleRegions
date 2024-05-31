@@ -1,31 +1,31 @@
-name: SimpleCells
+name: SimpleRegions
 version: '${version}'
-main: moe.krp.simplecells.SimpleCells
+main: moe.krp.simpleregions.SimpleRegions
 api-version: '1.18'
 depend:
   - WorldEdit
   - Vault
 commands:
-  simplecells:
-    aliases: [sc, simplec, scells]
-    description: SimpleCells base command
+  SimpleRegions:
+    aliases: [sr, simpler, sregions]
+    description: SimpleRegions base command
     usage: /<command> [subcommand]
 permissions:
-  simplecells.*:
-    description: SimpleCells base permission
+  SimpleRegions.*:
+    description: SimpleRegions base permission
     children:
-      simplecells.create:
-        description: Allows player to create a new cell definition
-      simplecells.delete:
-        description: Allows player to delete a cell definition
-      simplecells.info:
-        description: Allows player to view information about a cell definition
-      simplecells.sign:
-        description: Allows player to create, modify, or delete a cell sign
+      SimpleRegions.create:
+        description: Allows player to create a new region definition
+      SimpleRegions.delete:
+        description: Allows player to delete a region definition
+      SimpleRegions.info:
+        description: Allows player to view information about a region definition
+      SimpleRegions.sign:
+        description: Allows player to create, modify, or delete a region sign
         children:
-            simplecells.sign.create:
-                description: Allows player to create a cell sign
-            simplecells.sign.modify:
-                description: Allows player to modify a cell sign
-            simplecells.sign.delete:
-                description: Allows player to delete a cell sign
+            SimpleRegions.sign.create:
+                description: Allows player to create a region sign
+            SimpleRegions.sign.modify:
+                description: Allows player to modify a region sign
+            SimpleRegions.sign.delete:
+                description: Allows player to delete a region sign

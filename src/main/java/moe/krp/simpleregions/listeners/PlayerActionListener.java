@@ -1,4 +1,4 @@
-package moe.krp.simplecells.listeners;
+package moe.krp.simpleregions.listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEvent;

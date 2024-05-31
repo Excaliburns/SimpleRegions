@@ -1,9 +1,9 @@
-package moe.krp.simplecells.visualization;
+package moe.krp.simpleregions.visualization;
 
 import lombok.Getter;
-import moe.krp.simplecells.SimpleCells;
-import moe.krp.simplecells.util.RegionUtils;
-import moe.krp.simplecells.util.Vec3D;
+import moe.krp.simpleregions.SimpleRegions;
+import moe.krp.simpleregions.util.RegionUtils;
+import moe.krp.simpleregions.util.Vec3D;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -40,7 +40,7 @@ public class VisualizationRunnable extends BukkitRunnable {
         this.timerCounter = timerCounter;
         this.timerLimit = timerLimit;
         this.period = period;
-        this.runTaskTimer(SimpleCells.getInstance(), 0, period);
+        this.runTaskTimer(SimpleRegions.getInstance(), 0, period);
     }
 
     @Override
