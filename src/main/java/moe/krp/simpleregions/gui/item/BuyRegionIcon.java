@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 public class BuyRegionIcon extends Icon {
     final RegionDefinition regionDefinition;
@@ -19,11 +20,10 @@ public class BuyRegionIcon extends Icon {
                 ChatColor.BOLD + ChatColor.GOLD +
                 "BUY REGION"
         );
-        setLore(ChatColor.GRAY +
-                "Purchase this region for: \n" +
+        setLore(ChatColor.GRAY + "Purchase this region for:",
                 (regionDefinition.getRelatedSign().getCost() != 0 ? (
                         ChatColor.GOLD   + "$" +
-                        ChatColor.YELLOW + regionDefinition.getRelatedSign().getCost()
+                                ChatColor.YELLOW + regionDefinition.getRelatedSign().getCost()
                 ) : (
                         ChatColor.GREEN + "Free!"
                 ))
@@ -32,6 +32,11 @@ public class BuyRegionIcon extends Icon {
         this.onClick(event -> {
             event.setCancelled(true);
             final OfflinePlayer player = Bukkit.getOfflinePlayer(event.getWhoClicked().getName());
+            final Player onlinePlayer = player.getPlayer();
+            if (onlinePlayer != null) {
+                onlinePlayer.closeInventory();
+            }
+
             if (SimpleRegions.getEconomy().getBalance(player) < regionDefinition.getRelatedSign().getCost()) {
                 ChatUtils.sendErrorMessage(player.getPlayer(), "You don't have enough money to buy this region!");
                 return;

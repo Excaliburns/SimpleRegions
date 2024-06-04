@@ -7,7 +7,9 @@ import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
+import moe.krp.simpleregions.util.ConfigUtil;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -125,8 +127,12 @@ public class StorageManager {
         for (final File file : RegionFiles) {
             try {
                 final String contents = Files.readString(file.toPath());
-                final RegionDefinition Region = gson.fromJson(contents, RegionDefinition.class);
-                allRegions.add(Region);
+                final RegionDefinition region = gson.fromJson(contents, RegionDefinition.class);
+                region.setConfiguration(ConfigUtil.getRegionTypeConfiguration(region.getRegionType()));
+                allRegions.add(region);
+                if (region.getRelatedSign() != null) {
+                    signLocationMap.put(region.getRelatedSign().getLocation(), region);
+                }
             } catch (Exception e) {
                 SimpleRegions.log(Level.SEVERE, "Failed to load Region from file " + file.getName());
                 SimpleRegions.log(e);
@@ -171,8 +177,8 @@ public class StorageManager {
 
         final BlockState blockState = getSignBlockStateForRegion(region);
         if (blockState instanceof Sign signBlock) {
-            signBlock.line(0, Component.text(ChatColor.RED + region.getName()));
-            signBlock.line(1, Component.text(ChatColor.GOLD + player.getName()));
+            signBlock.line(0, Component.text(region.getName()).color(TextColor.color(0xFF5555)));
+            signBlock.line(1, Component.text(player.getName()).color(TextColor.color(0xFFAA00)));
             signBlock.line(2, Component.text("Owned until:"));
             signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
             signBlock.update();
@@ -215,13 +221,13 @@ public class StorageManager {
     }
 
     private void saveRegions(Set<RegionDefinition> RegionsToSave) {
-        for (final RegionDefinition Region : RegionsToSave) {
-            final File file = new File(SimpleRegions.getInstance().getDataFolder().getAbsolutePath() + "/Regions/" + Region.getName() + ".json");
+        for (final RegionDefinition region : RegionsToSave) {
+            final File file = new File(SimpleRegions.getInstance().getDataFolder().getAbsolutePath() + "/regions/" + region.getName() + ".json");
 
-            if (Region.isMarkedForDeletion()) {
+            if (region.isMarkedForDeletion()) {
                 final boolean fileDeletion = file.delete();
                 if (!fileDeletion) {
-                    SimpleRegions.log(Level.INFO, "Failed to delete file for Region " + Region.getName());
+                    SimpleRegions.log(Level.INFO, "Failed to delete file for Region " + region.getName());
                 }
                 continue;
             }
@@ -231,27 +237,27 @@ public class StorageManager {
                 final boolean parentCreationSuccess = parentExists || file.getParentFile().mkdirs();
 
                 if (!parentCreationSuccess) {
-                    SimpleRegions.log(Level.INFO, "Failed to create parent directory for Region " + Region.getName());
-                    allRegions.remove(Region);
+                    SimpleRegions.log(Level.INFO, "Failed to create parent directory for Region " + region.getName());
+                    allRegions.remove(region);
                     continue;
                 }
 
                 final boolean createFileSuccess = file.exists() || file.createNewFile();
                 if (!createFileSuccess) {
-                    SimpleRegions.log(Level.INFO, "Failed to create file for Region " + Region.getName());
-                    allRegions.remove(Region);
+                    SimpleRegions.log(Level.INFO, "Failed to create file for Region " + region.getName());
+                    allRegions.remove(region);
                     continue;
                 }
 
                 Writer writer = new FileWriter(file);
-                gson.toJson(Region, writer);
+                gson.toJson(region, writer);
                 writer.flush();
                 writer.close();
             } catch (IOException e) {
-                SimpleRegions.log(Level.INFO, "Failed to save Region " + Region.getName());
+                SimpleRegions.log(Level.INFO, "Failed to save Region " + region.getName());
                 SimpleRegions.log(e);
             }
-            SimpleRegions.log(Level.FINER, "Saved Region " + Region.getName());
+            SimpleRegions.log(Level.FINER, "Saved Region " + region.getName());
         }
     }
 }

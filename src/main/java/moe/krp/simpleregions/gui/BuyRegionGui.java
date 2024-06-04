@@ -1,10 +1,15 @@
 package moe.krp.simpleregions.gui;
 
 import mc.obliviate.inventory.Gui;
+import mc.obliviate.inventory.Icon;
+import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.gui.item.BuyRegionIcon;
 import moe.krp.simpleregions.helpers.RegionDefinition;
+import moe.krp.simpleregions.util.ChatUtils;
 import moe.krp.simpleregions.util.ConfigUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.ItemStack;
@@ -20,7 +25,6 @@ public class BuyRegionGui extends Gui {
     @Override
     public void onOpen(InventoryOpenEvent event) {
         fillGui(new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
-
-        addItem(13, new BuyRegionIcon(regionDefinition).getItem());
+        addItem(13, new BuyRegionIcon(regionDefinition));
     }
 }

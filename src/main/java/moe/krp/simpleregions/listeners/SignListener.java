@@ -2,12 +2,14 @@ package moe.krp.simpleregions.listeners;
 
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.config.StorageManager;
+import moe.krp.simpleregions.util.ChatUtils;
 import moe.krp.simpleregions.util.ConfigUtil;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.util.TimeUtils;
 import moe.krp.simpleregions.helpers.Vec3D;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -25,7 +27,7 @@ public class SignListener implements Listener {
     public void onCreateSign(SignChangeEvent e) {
         final Player user = e.getPlayer();
 
-        if (Objects.equals(e.line(0), Component.text(ConfigUtil.getSignLineZero()))) {
+        if (Objects.equals(e.line(0), Component.text("[" + ConfigUtil.getDisplayName() + "]"))) {
             if (!user.hasPermission("SimpleRegions.create")) {
                 user.sendMessage("You do not have permission to create a region sign");
                 e.setCancelled(true);
@@ -93,14 +95,18 @@ public class SignListener implements Listener {
 
             final boolean success = SimpleRegions.getStorageManager().addSign(regionName, signDef);
             if (success) {
-                user.sendMessage("Sign registered for region " + regionName);
-                e.line(0, Component.text(regionDef.getConfiguration().getBuySignLineZero()));
+                ChatUtils.sendMessage(user, "Sign registered for region " + regionName);
+                e.line(0, Component.text(regionDef.getConfiguration().getBuySignLineZero())
+                                   .color(TextColor.fromHexString(regionDef.getConfiguration().getBuySignLineZeroColor())));
                 e.line(1, Component.text(regionDef.getName()));
+                e.line(2, Component.empty());
                 if (cost == 0) {
-                    e.line(3, Component.text(ChatColor.GREEN + "Free!"));
+                    e.line(3, Component.text("Free!").color(TextColor.color(0x55FF55)));
                 }
                 else {
-                    e.line(3, Component.text(ChatColor.GOLD + "$" + ChatColor.YELLOW + cost));
+                    e.line(3, Component.text(ChatColor.GOLD + "$").color(TextColor.color(0xFFAA00)).append(
+                            Component.text(cost).color(TextColor.color(0xFFFF55))
+                    ));
                 }
             }
         }

@@ -42,7 +42,8 @@ public class SimpleRegionsCommand implements TabExecutor {
                 try {
                     region = session.getSelection(session.getSelectionWorld());
                 } catch (IncompleteRegionException e) {
-                    throw new RuntimeException(e);
+                    ChatUtils.sendErrorMessage(sender, "Please make a WorldEdit selection!");
+                    return true;
                 }
 
                 if (region.getWorld() == null) {

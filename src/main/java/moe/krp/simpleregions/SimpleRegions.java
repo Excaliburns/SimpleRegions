@@ -1,8 +1,10 @@
 package moe.krp.simpleregions;
 
 import lombok.Getter;
+import mc.obliviate.inventory.InventoryAPI;
 import moe.krp.simpleregions.commands.SimpleRegionsCommand;
 import moe.krp.simpleregions.config.StorageManager;
+import moe.krp.simpleregions.listeners.PlayerActionListener;
 import moe.krp.simpleregions.listeners.SignListener;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -37,6 +39,8 @@ public final class SimpleRegions extends JavaPlugin {
         loadInMemoryStores();
         registerCommands();
         registerListeners();
+        setupEconomy();
+        new InventoryAPI(this).init();
     }
 
     @Override
@@ -59,6 +63,7 @@ public final class SimpleRegions extends JavaPlugin {
 
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(new SignListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerActionListener(), this);
     }
 
     private void setUpTasks() {
