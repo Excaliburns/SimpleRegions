@@ -1,6 +1,7 @@
-package moe.krp.simpleregions.util;
+package moe.krp.simpleregions.helpers;
 
 import lombok.Data;
+import moe.krp.simpleregions.util.ConfigUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ public class RegionDefinition {
     private SignDefinition relatedSign;
     private List<UUID> otherAllowedPlayers;
 
+    private transient RegionTypeConfiguration configuration;
     private transient boolean markedForDeletion;
     private transient boolean dirty;
 
@@ -28,6 +30,7 @@ public class RegionDefinition {
         this.upperBound = upperBound;
         this.creator = creator;
         this.regionType = regionType;
+        this.configuration = ConfigUtil.getRegionTypeConfiguration(regionType);
         dirty = true;
         otherAllowedPlayers = new ArrayList<>();
     }

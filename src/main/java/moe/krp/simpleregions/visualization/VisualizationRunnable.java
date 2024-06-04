@@ -3,7 +3,7 @@ package moe.krp.simpleregions.visualization;
 import lombok.Getter;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.util.RegionUtils;
-import moe.krp.simpleregions.util.Vec3D;
+import moe.krp.simpleregions.helpers.Vec3D;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;

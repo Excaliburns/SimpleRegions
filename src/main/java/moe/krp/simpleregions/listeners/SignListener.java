@@ -3,12 +3,13 @@ package moe.krp.simpleregions.listeners;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.config.StorageManager;
 import moe.krp.simpleregions.util.ConfigUtil;
-import moe.krp.simpleregions.util.RegionDefinition;
-import moe.krp.simpleregions.util.SignDefinition;
+import moe.krp.simpleregions.helpers.RegionDefinition;
+import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.util.TimeUtils;
-import moe.krp.simpleregions.util.Vec3D;
+import moe.krp.simpleregions.helpers.Vec3D;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -93,6 +94,14 @@ public class SignListener implements Listener {
             final boolean success = SimpleRegions.getStorageManager().addSign(regionName, signDef);
             if (success) {
                 user.sendMessage("Sign registered for region " + regionName);
+                e.line(0, Component.text(regionDef.getConfiguration().getBuySignLineZero()));
+                e.line(1, Component.text(regionDef.getName()));
+                if (cost == 0) {
+                    e.line(3, Component.text(ChatColor.GREEN + "Free!"));
+                }
+                else {
+                    e.line(3, Component.text(ChatColor.GOLD + "$" + ChatColor.YELLOW + cost));
+                }
             }
         }
     }

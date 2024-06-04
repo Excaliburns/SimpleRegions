@@ -4,6 +4,9 @@ import java.time.Duration;
 
 public class TimeUtils {
     public static Duration getDurationFromTimeString(final String timeString) throws IllegalArgumentException {
+        if (timeString == null) {
+            return Duration.ZERO;
+        }
         // format is 1d2h3m4s
         final String[] timeParts = timeString.split("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
         Duration duration = Duration.ZERO;

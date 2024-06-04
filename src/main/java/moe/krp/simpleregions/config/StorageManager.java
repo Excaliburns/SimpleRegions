@@ -4,12 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sk89q.worldedit.regions.Region;
 import moe.krp.simpleregions.SimpleRegions;
-import moe.krp.simpleregions.util.RegionDefinition;
-import moe.krp.simpleregions.util.SignDefinition;
-import moe.krp.simpleregions.util.Vec3D;
+import moe.krp.simpleregions.helpers.RegionDefinition;
+import moe.krp.simpleregions.helpers.SignDefinition;
+import moe.krp.simpleregions.helpers.Vec3D;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -171,8 +171,9 @@ public class StorageManager {
 
         final BlockState blockState = getSignBlockStateForRegion(region);
         if (blockState instanceof Sign signBlock) {
-            signBlock.line(1, Component.text("Owned By:"));
-            signBlock.line(2, Component.text(player.getName()));
+            signBlock.line(0, Component.text(ChatColor.RED + region.getName()));
+            signBlock.line(1, Component.text(ChatColor.GOLD + player.getName()));
+            signBlock.line(2, Component.text("Owned until:"));
             signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
             signBlock.update();
         }

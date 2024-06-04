@@ -1,7 +1,8 @@
-package moe.krp.simpleregions.util;
+package moe.krp.simpleregions.helpers;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import moe.krp.simpleregions.util.TimeUtils;
 
 import java.time.Duration;
 

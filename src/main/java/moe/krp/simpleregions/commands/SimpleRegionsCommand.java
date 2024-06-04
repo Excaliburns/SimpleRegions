@@ -6,8 +6,9 @@ import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.regions.Region;
 import moe.krp.simpleregions.SimpleRegions;
+import moe.krp.simpleregions.util.ChatUtils;
 import moe.krp.simpleregions.util.ConfigUtil;
-import moe.krp.simpleregions.util.RegionDefinition;
+import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.visualization.VisualizationManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -34,7 +35,7 @@ public class SimpleRegionsCommand implements TabExecutor {
                 final Region region;
 
                 if (args.length < 3) {
-                    sender.sendMessage("Usage: /simpleregions create <regionName> <regionType>");
+                    ChatUtils.sendMessage(sender, "Usage: /simpleregions create <regionName> <regionType>");
                     return true;
                 }
 
@@ -45,7 +46,7 @@ public class SimpleRegionsCommand implements TabExecutor {
                 }
 
                 if (region.getWorld() == null) {
-                    sender.sendMessage("Region world cannot be null");
+                    ChatUtils.sendMessage(sender, "Region world cannot be null");
                     return true;
                 }
 
@@ -107,11 +108,11 @@ public class SimpleRegionsCommand implements TabExecutor {
     private boolean handleRegionInfo(final CommandSender sender, final String regionName) {
         final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
         if (def == null) {
-            sender.sendMessage("region not found");
+            ChatUtils.sendErrorMessage(sender, "Region not found");
             return false;
         }
 
-        sender.sendMessage(def.toString());
+        ChatUtils.sendMessage(sender, String.format("Region: %s", def));
 
         return true;
     }
@@ -122,12 +123,12 @@ public class SimpleRegionsCommand implements TabExecutor {
     ) {
         final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
         if (def == null) {
-            sender.sendMessage("region not found");
+            ChatUtils.sendErrorMessage(sender, "Region not found");
             return false;
         }
 
         SimpleRegions.getStorageManager().markRegionForDelete(regionName);
-        sender.sendMessage(String.format("region %s deleted", regionName));
+        ChatUtils.sendMessage(sender, String.format("Region %s deleted", regionName));
 
         return true;
     }
@@ -141,12 +142,12 @@ public class SimpleRegionsCommand implements TabExecutor {
     ) {
         final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
         if (def != null) {
-            creator.sendMessage("Region already exists");
+            ChatUtils.sendErrorMessage(creator, "Region already exists");
             return false;
         }
 
         if (!ConfigUtil.getRegionTypes().contains(regionType)) {
-            creator.sendMessage("Invalid region type");
+            ChatUtils.sendErrorMessage(creator, "Invalid region type");
             return false;
         }
 
@@ -155,7 +156,7 @@ public class SimpleRegionsCommand implements TabExecutor {
         );
 
         if (addRegion) {
-            creator.sendMessage(String.format("region %s created", regionName));
+            ChatUtils.sendMessage(creator, String.format("Region %s created", regionName));
         }
 
         return addRegion;
@@ -164,7 +165,7 @@ public class SimpleRegionsCommand implements TabExecutor {
     private boolean handleRegionVisualization(final CommandSender sender, final String regionName) {
         final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
         if (def == null) {
-            sender.sendMessage("region not found");
+            ChatUtils.sendErrorMessage(sender, "Region not found.");
             return false;
         }
 
@@ -178,19 +179,19 @@ public class SimpleRegionsCommand implements TabExecutor {
     private boolean handleRegionSetOwner(final CommandSender sender, final String regionName, final String playerName) {
         final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
         if (def == null) {
-            sender.sendMessage("Region not found");
+            ChatUtils.sendErrorMessage(sender, "Region not found.");
             return false;
         }
 
         final Player player = SimpleRegions.getInstance().getServer().getPlayer(playerName);
         if (player == null) {
-            sender.sendMessage("Player not found");
+            ChatUtils.sendErrorMessage(sender, "Player not found.");
             return false;
         }
 
         SimpleRegions.getStorageManager().setRegionOwned(regionName, player.getUniqueId());
 
-        sender.sendMessage(String.format("Region %s is now owned by %s", regionName, playerName));
+        ChatUtils.sendMessage(sender, String.format("Region %s is now owned by %s", regionName, playerName));
 
         return true;
     }

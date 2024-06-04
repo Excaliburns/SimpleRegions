@@ -1,5 +1,6 @@
 package moe.krp.simpleregions.util;
 
+import moe.krp.simpleregions.helpers.Vec3D;
 import org.bukkit.Location;
 import org.bukkit.World;
 

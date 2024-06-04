@@ -4,8 +4,10 @@ import lombok.Getter;
 import moe.krp.simpleregions.commands.SimpleRegionsCommand;
 import moe.krp.simpleregions.config.StorageManager;
 import moe.krp.simpleregions.listeners.SignListener;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
@@ -14,6 +16,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class SimpleRegions extends JavaPlugin {
+    @Getter
+    private static Economy economy;
+
     static Logger logger;
     @Getter
     private static SimpleRegions instance;
@@ -72,6 +77,18 @@ public final class SimpleRegions extends JavaPlugin {
         );
 
         log("Tasks set up");
+    }
+
+    private boolean setupEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+        if (rsp == null) {
+            return false;
+        }
+        economy = rsp.getProvider();
+        return economy != null;
     }
 
     public static void log(String s) {

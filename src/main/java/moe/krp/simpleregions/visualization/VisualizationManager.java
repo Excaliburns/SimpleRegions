@@ -1,7 +1,7 @@
 package moe.krp.simpleregions.visualization;
 
 import moe.krp.simpleregions.SimpleRegions;
-import moe.krp.simpleregions.util.RegionDefinition;
+import moe.krp.simpleregions.helpers.RegionDefinition;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 

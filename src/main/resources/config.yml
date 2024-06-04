@@ -1,4 +1,6 @@
+chat-prefix: '&8[&6SimpleRegions&8]&r >> '
 sign-line-zero: '[SimpleRegions]'
+sign-gui-title: 'Purchase Region'
 region-types:
   - PrisonCell
   - BlackMarket
@@ -6,6 +8,7 @@ region-types:
   - Courtyard-Large
 region-type-configuration:
   PrisonCell:
+    buy-sign-line-zero: '&2[RENT]'
     remove-items-on-expiry: false
   BlackMarket:
     remove-items-on-expiry: true
