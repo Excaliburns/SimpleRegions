@@ -2,6 +2,7 @@ package moe.krp.simpleregions.gui;
 
 import mc.obliviate.inventory.Gui;
 import moe.krp.simpleregions.gui.item.AddMemberIcon;
+import moe.krp.simpleregions.gui.item.AdditionalOwnerIcon;
 import moe.krp.simpleregions.gui.item.DeleteMemberIcon;
 import moe.krp.simpleregions.gui.item.GoBackIcon;
 import moe.krp.simpleregions.helpers.RegionDefinition;
@@ -31,7 +32,10 @@ public class MemberManagementGui extends Gui {
         int slots = 0;
         for (final UUID otherPlayer : regionDefinition.getOtherAllowedPlayers()) {
             if (slots > 26) break;
-            addItem(slots, ItemUtils.getSkullForPlayerUuid(otherPlayer, null));
+            addItem(slots, new AdditionalOwnerIcon(
+                    ItemUtils.getSkullForPlayerUuid(otherPlayer, null),
+                    regionDefinition
+            ));
             slots++;
         }
 
@@ -39,8 +43,7 @@ public class MemberManagementGui extends Gui {
                 (e) -> new ManageRegionGui(player, ManageRegionGui.getManageRegionGuiId(player.getName()), regionDefinition).open();
 
         addItem(27, new GoBackIcon(onBack));
-        addItem(30, new AddMemberIcon(regionDefinition));
-        addItem(32, new DeleteMemberIcon(regionDefinition));
+        addItem(31, new AddMemberIcon(regionDefinition));
     }
 
     public static String getMemberManagementGuiId(String playerName) {

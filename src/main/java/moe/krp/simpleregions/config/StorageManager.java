@@ -103,6 +103,15 @@ public class StorageManager {
         region.setDirty(true);
     }
 
+    public void removeAllowedPlayer(final String regionName, final UUID player) {
+        final RegionDefinition region = getRegion(regionName);
+        if (region == null) {
+            return;
+        }
+        region.getOtherAllowedPlayers().remove(player);
+        region.setDirty(true);
+    }
+
     public boolean addSign(String regionName, SignDefinition signDefinition) {
         final RegionDefinition regionDefinition = allRegions
                 .stream()

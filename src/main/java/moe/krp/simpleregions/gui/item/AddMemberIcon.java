@@ -42,14 +42,21 @@ public class AddMemberIcon extends Icon {
                             );
                             return Collections.emptyList();
                         }
+                        if (playerName.equalsIgnoreCase(clicker.getName())) {
+                            stateSnapshot.getPlayer().sendMessage(
+                                    Component.text().color(TextColor.color(0xD00000))
+                                             .content("You can't add yourself!").build()
+                            );
+                            return Collections.emptyList();
+                        }
 
                         return List.of(AnvilGUI.ResponseAction.close(),
                                 AnvilGUI.ResponseAction.run(
                                         () -> SimpleRegions.getStorageManager().addAllowedPlayer(
-                                                regionDefinition.getName(), Bukkit.getOfflinePlayer(playerName).getUniqueId()
+                                                regionDefinition.getName(),
+                                                Bukkit.getOfflinePlayer(playerName).getUniqueId()
                         )));
                     })
-                    .preventClose()
                     .text("Rename this!")
                     .title("Enter a player name")
                     .plugin(SimpleRegions.getInstance())
