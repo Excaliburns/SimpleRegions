@@ -3,7 +3,10 @@ package moe.krp.simpleregions.util;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.ChatColor;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class ChatUtils {
     public static void sendMessage(final Audience audience, final String string) {
@@ -11,8 +14,8 @@ public class ChatUtils {
     }
     public static void sendMessage(final Audience audience, final Component component) {
         audience.sendMessage(
-                ConfigUtil.getChatPrefix()
-                          .append(component).color(TextColor.color(0xDADADA))
+                ConfigUtils.getChatPrefix()
+                           .append(component).color(TextColor.color(0xDADADA))
         );
     }
     public static void sendErrorMessage(final Audience audience, final String string) {
@@ -20,9 +23,9 @@ public class ChatUtils {
     }
     public static void sendErrorMessage(final Audience audience, final Component component) {
         audience.sendMessage(
-                ConfigUtil.getChatPrefix()
-                          .append(Component.text("ERROR: ").color(TextColor.color(0xFF5555)))
-                          .append(component).color(TextColor.color(0xFF5555))
+                ConfigUtils.getChatPrefix()
+                           .append(Component.text("ERROR: ").color(TextColor.color(0xFF5555)))
+                           .append(component).color(TextColor.color(0xFF5555))
         );
     }
 }

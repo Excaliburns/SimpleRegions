@@ -1,3 +1,18 @@
+buildscript {
+    ext {
+        asmAsmVersion = "9.6" // https://gitlab.ow2.org/asm/asm/-/tags
+    }
+    configurations {
+        classpath {
+            resolutionStrategy {
+                //in order to handle jackson's higher release version in shadow, this needs to be upgraded to latest.
+                force(group: "org.ow2.asm", name: "asm", version: asmAsmVersion)
+                force(group: "org.ow2.asm", name: "asm-commons", version: asmAsmVersion)
+            }
+        }
+    }
+}
+
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
@@ -16,13 +31,16 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven {
+        name = "codemc-repo"
+        url = "https://repo.codemc.org/repository/maven-snapshots/"
+    }
     maven { url 'https://jitpack.io' }
     maven { url 'https://maven.enginehub.org/repo/' }
 }
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT"
-    implementation 'com.github.hamza-cskn.obliviate-invs:core:4.3.0'
 
     compileOnly 'com.sk89q.worldedit:worldedit-core:7.2.9'
     compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.9'
@@ -33,12 +51,16 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
     implementation 'com.github.hamza-cskn.obliviate-invs:core:4.3.0'
+    implementation 'net.wesjd:anvilgui:1.9.4-SNAPSHOT'
 }
 
 shadowJar {
     dependencies {
         include dependency('com.github.hamza-cskn.obliviate-invs:core:4.3.0')
+        include dependency('net.wesjd:anvilgui:1.9.4-SNAPSHOT')
     }
+
+    relocate 'net.wsjd.anvilgui', 'moe.krp.anvilgui'
 }
 
 def targetJavaVersion = 17

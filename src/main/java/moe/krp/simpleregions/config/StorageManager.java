@@ -7,11 +7,10 @@ import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
-import moe.krp.simpleregions.util.ConfigUtil;
+import moe.krp.simpleregions.util.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -51,7 +50,8 @@ public class StorageManager {
     public RegionDefinition getRegion(String name) {
         return allRegions
                 .stream()
-                .filter(Region -> Region.getName().equals(name))
+                .filter(region -> region.getName().equals(name))
+                .filter(region -> !region.isMarkedForDeletion())
                 .findFirst()
                 .orElse(null);
     }
@@ -74,17 +74,18 @@ public class StorageManager {
 
     public void markRegionForDelete(final String name) {
         allRegions.stream()
-                .filter( Region -> Region.getName().equals(name))
+                .filter( region -> region.getName().equals(name))
                 .findFirst()
-                .ifPresent( Region -> {
-                    Region.setMarkedForDeletion(true);
-                    Region.setDirty(true);
+                .ifPresent( region -> {
+                    region.setMarkedForDeletion(true);
+                    region.setDirty(true);
                 });
     }
 
     public Set<String> getRegionNames() {
         return allRegions
                 .stream()
+                .filter(region -> !region.isMarkedForDeletion())
                 .map(RegionDefinition::getName)
                 .collect(Collectors.toSet());
     }
@@ -93,22 +94,29 @@ public class StorageManager {
         return signLocationMap.get(location);
     }
 
+    public void addAllowedPlayer(final String regionName, final UUID player) {
+        final RegionDefinition region = getRegion(regionName);
+        if (region == null) {
+            return;
+        }
+        region.getOtherAllowedPlayers().add(player);
+        region.setDirty(true);
+    }
+
     public boolean addSign(String regionName, SignDefinition signDefinition) {
-        final RegionDefinition RegionDefinition = allRegions
+        final RegionDefinition regionDefinition = allRegions
                 .stream()
                 .filter(regionDef -> regionDef.getName().equalsIgnoreCase(regionName))
                 .findFirst()
                 .orElse(null);
         // Validation should be handled by calling method
-        if (RegionDefinition == null) {
+        if (regionDefinition == null) {
             return false;
         }
 
-        allRegions.remove(RegionDefinition);
-        RegionDefinition.setRelatedSign(signDefinition);
-        RegionDefinition.setDirty(true);
-        allRegions.add(RegionDefinition);
-        signLocationMap.put(signDefinition.getLocation(), RegionDefinition);
+        regionDefinition.setRelatedSign(signDefinition);
+        regionDefinition.setDirty(true);
+        signLocationMap.put(signDefinition.getLocation(), regionDefinition);
         return true;
     }
 
@@ -128,7 +136,7 @@ public class StorageManager {
             try {
                 final String contents = Files.readString(file.toPath());
                 final RegionDefinition region = gson.fromJson(contents, RegionDefinition.class);
-                region.setConfiguration(ConfigUtil.getRegionTypeConfiguration(region.getRegionType()));
+                region.setConfiguration(ConfigUtils.getRegionTypeConfiguration(region.getRegionType()));
                 allRegions.add(region);
                 if (region.getRelatedSign() != null) {
                     signLocationMap.put(region.getRelatedSign().getLocation(), region);
@@ -141,21 +149,21 @@ public class StorageManager {
     }
 
     public void cleanUpDirtyStorage() {
-        final Set<RegionDefinition> RegionsToSave = new HashSet<>();
+        final Set<RegionDefinition> regionsToSave = new HashSet<>();
 
-        for (RegionDefinition Region : allRegions) {
+        for (RegionDefinition region : allRegions) {
             synchronized (allRegions) {
-                if (Region.isDirty()) {
-                    RegionsToSave.add(Region);
-                    Region.setDirty(false);
+                if (region.isDirty()) {
+                    regionsToSave.add(region);
+                    region.setDirty(false);
                 }
-                if (Region.isMarkedForDeletion()) {
-                    locationToPlayerOwnerMap.remove(Region);
-                    allRegions.remove(Region);
+                if (region.isMarkedForDeletion()) {
+                    locationToPlayerOwnerMap.remove(region);
+                    allRegions.remove(region);
                 }
             }
         }
-        saveRegions(RegionsToSave);
+        saveRegions(regionsToSave);
     }
 
     public void setRegionOwned(
@@ -220,8 +228,8 @@ public class StorageManager {
         return block.getState();
     }
 
-    private void saveRegions(Set<RegionDefinition> RegionsToSave) {
-        for (final RegionDefinition region : RegionsToSave) {
+    private void saveRegions(Set<RegionDefinition> regionsToSave) {
+        for (final RegionDefinition region : regionsToSave) {
             final File file = new File(SimpleRegions.getInstance().getDataFolder().getAbsolutePath() + "/regions/" + region.getName() + ".json");
 
             if (region.isMarkedForDeletion()) {

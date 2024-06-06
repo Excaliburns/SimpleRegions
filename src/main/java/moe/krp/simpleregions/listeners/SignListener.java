@@ -3,7 +3,7 @@ package moe.krp.simpleregions.listeners;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.config.StorageManager;
 import moe.krp.simpleregions.util.ChatUtils;
-import moe.krp.simpleregions.util.ConfigUtil;
+import moe.krp.simpleregions.util.ConfigUtils;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.util.TimeUtils;
@@ -27,7 +27,7 @@ public class SignListener implements Listener {
     public void onCreateSign(SignChangeEvent e) {
         final Player user = e.getPlayer();
 
-        if (Objects.equals(e.line(0), Component.text("[" + ConfigUtil.getDisplayName() + "]"))) {
+        if (Objects.equals(e.line(0), Component.text("[" + ConfigUtils.getDisplayName() + "]"))) {
             if (!user.hasPermission("SimpleRegions.create")) {
                 user.sendMessage("You do not have permission to create a region sign");
                 e.setCancelled(true);

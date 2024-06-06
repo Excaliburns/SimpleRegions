@@ -1,7 +1,7 @@
 package moe.krp.simpleregions.helpers;
 
 import lombok.Data;
-import moe.krp.simpleregions.util.ConfigUtil;
+import moe.krp.simpleregions.util.ConfigUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ public class RegionDefinition {
         this.upperBound = upperBound;
         this.creator = creator;
         this.regionType = regionType;
-        this.configuration = ConfigUtil.getRegionTypeConfiguration(regionType);
+        this.configuration = ConfigUtils.getRegionTypeConfiguration(regionType);
         dirty = true;
         otherAllowedPlayers = new ArrayList<>();
     }

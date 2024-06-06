@@ -4,6 +4,8 @@ import mc.obliviate.inventory.Gui;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.config.StorageManager;
 import moe.krp.simpleregions.gui.BuyRegionGui;
+import moe.krp.simpleregions.gui.ManageRegionGui;
+import moe.krp.simpleregions.gui.MemberManagementGui;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
@@ -38,11 +40,20 @@ public class PlayerActionListener implements Listener {
             return;
         }
 
-        event.setCancelled(true);
-        final Gui gui = new BuyRegionGui(
-                event.getPlayer(), "buy_region_gui_"+event.getPlayer().getName().toLowerCase(),
-                def
-        );
-        gui.open();
+        if (def.getOwnedBy() == null) {
+            event.setCancelled(true);
+            new BuyRegionGui(
+                    event.getPlayer(),
+                    BuyRegionGui.getBuyRegionGuiId(event.getPlayer().getName()),
+                    def
+            ).open();
+        }
+        else if (def.getOwnedBy().equals(event.getPlayer().getUniqueId())) {
+            new ManageRegionGui(
+                    event.getPlayer(),
+                    ManageRegionGui.getManageRegionGuiId(event.getPlayer().getName()),
+                    def
+            ).open();
+        }
     }
 }

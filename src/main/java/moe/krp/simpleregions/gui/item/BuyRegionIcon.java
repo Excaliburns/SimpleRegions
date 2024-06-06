@@ -14,10 +14,10 @@ public class BuyRegionIcon extends Icon {
     final RegionDefinition regionDefinition;
 
     public BuyRegionIcon(final RegionDefinition regionDefinition) {
-        super(Material.CLOCK);
-        setName(ChatColor.GOLD +
+        super(Material.EMERALD);
+        setName(ChatColor.GRAY +
                 ">> " +
-                ChatColor.BOLD + ChatColor.GOLD +
+                ChatColor.BOLD + ChatColor.GREEN +
                 "BUY REGION"
         );
         setLore(ChatColor.GRAY + "Purchase this region for:",

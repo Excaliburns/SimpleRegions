@@ -7,7 +7,7 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.regions.Region;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.util.ChatUtils;
-import moe.krp.simpleregions.util.ConfigUtil;
+import moe.krp.simpleregions.util.ConfigUtils;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.visualization.VisualizationManager;
 import org.bukkit.command.Command;
@@ -72,9 +72,9 @@ public class SimpleRegionsCommand implements TabExecutor {
             return Collections.emptyList();
         }
         else if (args.length == 3 && args[0].equals("create")) {
-            return ConfigUtil.getRegionTypes()
-                    .stream().filter(regionType -> regionType.startsWith(args[2]))
-                    .collect(Collectors.toList());
+            return ConfigUtils.getRegionTypes()
+                              .stream().filter(regionType -> regionType.startsWith(args[2]))
+                              .collect(Collectors.toList());
         }
         else if (args.length == 2 && args[0].equals("delete")) {
             return SimpleRegions.getStorageManager().getRegionNames()
@@ -147,7 +147,7 @@ public class SimpleRegionsCommand implements TabExecutor {
             return false;
         }
 
-        if (!ConfigUtil.getRegionTypes().contains(regionType)) {
+        if (!ConfigUtils.getRegionTypes().contains(regionType)) {
             ChatUtils.sendErrorMessage(creator, "Invalid region type");
             return false;
         }

@@ -1,5 +1,4 @@
 display-name: 'SimpleRegions'
-sign-gui-title: 'Purchase Region'
 region-types:
   - PrisonCell
   - BlackMarket

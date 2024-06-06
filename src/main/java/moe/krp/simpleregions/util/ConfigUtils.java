@@ -4,12 +4,11 @@ import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.helpers.RegionTypeConfiguration;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.List;
 
-public class ConfigUtil {
+public class ConfigUtils {
     private static final SimpleRegions instance = SimpleRegions.getInstance();
 
     public static List<String> getRegionTypes() {
@@ -18,10 +17,6 @@ public class ConfigUtil {
 
     public static String getDisplayName() {
         return instance.getConfig().getString("display-name");
-    }
-
-    public static String getBuyRegionGuiTitle() {
-        return instance.getConfig().getString("sign-gui-title");
     }
 
     public static Component getChatPrefix() {
