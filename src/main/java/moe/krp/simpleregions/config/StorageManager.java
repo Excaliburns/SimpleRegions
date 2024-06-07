@@ -7,6 +7,7 @@ import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
+import moe.krp.simpleregions.listeners.SignListener;
 import moe.krp.simpleregions.util.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
@@ -90,8 +91,26 @@ public class StorageManager {
                 .collect(Collectors.toSet());
     }
 
-    public RegionDefinition getRegionDefinitionByLocation(final Vec3D location) {
+    public RegionDefinition getRegionDefinitionBySignLocation(final Vec3D location) {
         return signLocationMap.get(location);
+    }
+
+    public void resetOwnership(final String regionName) {
+        final RegionDefinition regionDefinition = getRegion(regionName);
+        final Vec3D location = regionDefinition.getRelatedSign().getLocation();
+        final World world = Bukkit.getServer().getWorld(location.getWorld());
+        if (world != null) {
+            SignListener.resetWorldSign(
+                    (Sign) world.getBlockAt(location.toLocation()).getState(),
+                    SimpleRegions.getStorageManager().getRegionDefinitionBySignLocation(location),
+                    regionDefinition.getRelatedSign().getCost()
+            );
+        }
+        else {
+            SimpleRegions.log("World " + location.getWorld() + " does not exist while resetting ownership of " + regionDefinition.getName());
+        }
+
+        regionDefinition.clearOwnerAndReset();
     }
 
     public void addAllowedPlayer(final String regionName, final UUID player) {
@@ -112,12 +131,20 @@ public class StorageManager {
         region.setDirty(true);
     }
 
+    public boolean removeSign(String regionName) {
+        final RegionDefinition regionDefinition = getRegion(regionName);
+        if (regionDefinition == null) {
+            return false;
+        }
+        final SignDefinition signDefinition = regionDefinition.getRelatedSign();
+        regionDefinition.setRelatedSign(null);
+        regionDefinition.setDirty(true);
+        signLocationMap.remove(signDefinition.getLocation());
+        return true;
+    }
+
     public boolean addSign(String regionName, SignDefinition signDefinition) {
-        final RegionDefinition regionDefinition = allRegions
-                .stream()
-                .filter(regionDef -> regionDef.getName().equalsIgnoreCase(regionName))
-                .findFirst()
-                .orElse(null);
+        final RegionDefinition regionDefinition = getRegion(regionName);
         // Validation should be handled by calling method
         if (regionDefinition == null) {
             return false;
@@ -214,7 +241,13 @@ public class StorageManager {
             final BlockState blockState = getSignBlockStateForRegion(region);
             if (blockState instanceof Sign signBlock) {
                 final SignDefinition sign = region.getRelatedSign();
-                sign.tickDownTime(duration);
+                final Duration newDuration = sign.tickDownTime(duration);
+
+                if (newDuration.isNegative() || newDuration.isZero()) {
+                    SimpleRegions.getStorageManager().resetOwnership(region.getName());
+                    return;
+                }
+
                 signBlock.line(3, Component.text(sign.getDuration()));
                 signBlock.update();
                 region.setDirty(true);

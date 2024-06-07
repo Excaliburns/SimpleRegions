@@ -1,6 +1,7 @@
 package moe.krp.simpleregions.util;
 
 import java.time.Duration;
+import java.util.Objects;
 
 public class TimeUtils {
     public static Duration getDurationFromTimeString(final String timeString) throws IllegalArgumentException {
@@ -8,19 +9,31 @@ public class TimeUtils {
             return Duration.ZERO;
         }
         // format is 1d2h3m4s
-        final String[] timeParts = timeString.split("(?<=\\D)(?=\\d)|(?<=\\d)(?=\\D)");
+        final String[] timeParts = timeString.split("(?<=\\D)(?=\\d|-\\d)|(?<=\\d)(?=\\D)");
         Duration duration = Duration.ZERO;
-        for (int i = 0; i < timeParts.length; i += 2) {
-            final String timeUnit = timeParts[i + 1];
-            final long timeValue = Long.parseLong(timeParts[i]);
-            duration = switch (timeUnit) {
-                case "d" -> duration.plusDays(timeValue);
-                case "h" -> duration.plusHours(timeValue);
-                case "m" -> duration.plusMinutes(timeValue);
-                case "s" -> duration.plusSeconds(timeValue);
-                default -> throw new IllegalArgumentException("Invalid time unit: " + timeUnit);
+        boolean isNegative = false;
+        Long timeValue = null;
+        for (final String token : timeParts) {
+            if (token.equals("-")) {
+                isNegative = true;
+                continue;
+            }
+            if (timeValue == null) {
+                timeValue = Long.parseLong(token);
+                continue;
+            }
+            duration = switch (token) {
+                case "d" -> isNegative ? duration.minusDays(timeValue) : duration.plusDays(timeValue);
+                case "h" -> isNegative ? duration.minusHours(timeValue) : duration.plusHours(timeValue);
+                case "m" -> isNegative ? duration.minusMinutes(timeValue) : duration.plusMinutes(timeValue);
+                case "s" -> isNegative ? duration.minusSeconds(timeValue) : duration.plusSeconds(timeValue);
+                default -> throw new IllegalArgumentException("Invalid time unit: " + token);
             };
+
+            isNegative = false;
+            timeValue = null;
         }
+
         return duration;
     }
 

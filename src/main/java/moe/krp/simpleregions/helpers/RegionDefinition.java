@@ -34,4 +34,13 @@ public class RegionDefinition {
         dirty = true;
         otherAllowedPlayers = new ArrayList<>();
     }
+
+    public void clearOwnerAndReset() {
+        this.otherAllowedPlayers = new ArrayList<>();
+        this.ownedBy = null;
+        if (this.getRelatedSign() != null) {
+            this.getRelatedSign().setDuration(this.getRelatedSign().getOriginalDuration());
+        }
+        this.dirty = true;
+    }
 }
