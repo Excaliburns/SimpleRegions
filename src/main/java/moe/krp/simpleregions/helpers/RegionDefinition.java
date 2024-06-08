@@ -1,10 +1,15 @@
 package moe.krp.simpleregions.helpers;
 
 import lombok.Data;
+import moe.krp.simpleregions.SimpleRegions;
+import moe.krp.simpleregions.util.ChatUtils;
 import moe.krp.simpleregions.util.ConfigUtils;
+import org.bukkit.util.BoundingBox;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -14,7 +19,7 @@ public class RegionDefinition {
     private String world;
     private Vec3D lowerBound;
     private Vec3D upperBound;
-    private UUID ownedBy;
+    private UUID owner;
     private UUID creator;
     private SignDefinition relatedSign;
     private List<UUID> otherAllowedPlayers;
@@ -37,10 +42,29 @@ public class RegionDefinition {
 
     public void clearOwnerAndReset() {
         this.otherAllowedPlayers = new ArrayList<>();
-        this.ownedBy = null;
+        this.owner = null;
         if (this.getRelatedSign() != null) {
             this.getRelatedSign().setDuration(this.getRelatedSign().getOriginalDuration());
         }
         this.dirty = true;
+    }
+
+    public RegionDefinition getRegionIfPointWithin(final Vec3D point) {
+        final boolean isWithin = point.getX() >= lowerBound.getX() && point.getX() <= upperBound.getX()
+                              && point.getY() >= lowerBound.getY() && point.getY() <= upperBound.getY()
+                              && point.getZ() >= lowerBound.getZ() && point.getZ() <= upperBound.getZ();
+        return isWithin ? this : null;
+    }
+
+    public Set<Vec3D> getEnvelopingChunkVecs() {
+        final HashSet<Vec3D> chunkVecs = new HashSet<>();
+
+        for (int x = (int) lowerBound.getX(); x <= (int) upperBound.getX() + 15; x += 16) {
+            for (int z = (int) lowerBound.getZ(); z <= (int) upperBound.getZ() + 15; z += 16) {
+                chunkVecs.add(new Vec3D(x >> 4, 0, z >> 4, world));
+            }
+        }
+
+        return chunkVecs;
     }
 }

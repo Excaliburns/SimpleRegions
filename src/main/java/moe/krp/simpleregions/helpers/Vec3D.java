@@ -4,6 +4,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import lombok.Data;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.util.Vector;
 
 @Data
 public class Vec3D {
@@ -11,6 +12,13 @@ public class Vec3D {
     private long y;
     private long z;
     private String world;
+
+    public Vec3D(int x, int y, int z, String world) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.world = world;
+    }
 
     public Vec3D(final Location location) {
         this.x = location.getBlockX();
@@ -26,7 +34,12 @@ public class Vec3D {
         this.world = world;
     }
 
+    public Vec3D toChunkVec() {
+        return new Vec3D((int) x >> 4, 0, (int) z >> 4, world);
+    }
+
     public Location toLocation() {
         return new Location(Bukkit.getWorld(world), x, y, z);
     }
+    public Vector toVector() { return new Vector(x, y, z); }
 }

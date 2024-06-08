@@ -107,7 +107,7 @@ public class SimpleRegionsCommand implements TabExecutor {
     }
 
     private boolean handleRegionInfo(final CommandSender sender, final String regionName) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
+        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
         if (def == null) {
             ChatUtils.sendErrorMessage(sender, "Region not found");
             return false;
@@ -122,7 +122,7 @@ public class SimpleRegionsCommand implements TabExecutor {
             final CommandSender sender,
             final String regionName
     ) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
+        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
         if (def == null) {
             ChatUtils.sendErrorMessage(sender, "Region not found");
             return false;
@@ -141,7 +141,7 @@ public class SimpleRegionsCommand implements TabExecutor {
             final String regionType,
             final String worldName
     ) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
+        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
         if (def != null) {
             ChatUtils.sendErrorMessage(creator, "Region already exists");
             return false;
@@ -164,7 +164,7 @@ public class SimpleRegionsCommand implements TabExecutor {
     }
 
     private boolean handleRegionVisualization(final CommandSender sender, final String regionName) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
+        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
         if (def == null) {
             ChatUtils.sendErrorMessage(sender, "Region not found.");
             return false;
@@ -172,13 +172,13 @@ public class SimpleRegionsCommand implements TabExecutor {
 
         final Player player = (Player) sender;
         // manager handles validation
-        VisualizationManager.displayVisualizationForregion(player, def);
+        VisualizationManager.displayVisualizationForRegion(player, def);
 
         return true;
     }
 
     private boolean handleRegionSetOwner(final CommandSender sender, final String regionName, final String playerName) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegion(regionName);
+        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
         if (def == null) {
             ChatUtils.sendErrorMessage(sender, "Region not found.");
             return false;

@@ -45,7 +45,7 @@ public class PlayerActionListener implements Listener {
             return;
         }
 
-        if (def.getOwnedBy() == null) {
+        if (def.getOwner() == null) {
             event.setCancelled(true);
             new BuyRegionGui(
                     event.getPlayer(),
@@ -53,7 +53,7 @@ public class PlayerActionListener implements Listener {
                     def
             ).open();
         }
-        else if (def.getOwnedBy().equals(event.getPlayer().getUniqueId())) {
+        else if (def.getOwner().equals(event.getPlayer().getUniqueId())) {
             new ManageRegionGui(
                     event.getPlayer(),
                     ManageRegionGui.getManageRegionGuiId(event.getPlayer().getName()),

@@ -67,7 +67,7 @@ public class SignListener implements Listener {
                 return;
             }
 
-            final RegionDefinition regionDef = storageManager.getRegion(regionName);
+            final RegionDefinition regionDef = storageManager.getRegionByName(regionName);
             if (regionDef == null) {
                 ChatUtils.sendMessage(user, "Region " + regionName + " does not exist.");
                 return;
