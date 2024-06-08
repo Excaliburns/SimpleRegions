@@ -2,9 +2,9 @@ package moe.krp.simpleregions.gui.item;
 
 import com.destroystokyo.paper.profile.PlayerProfile;
 import mc.obliviate.inventory.Icon;
+import moe.krp.simpleregions.gui.ManageMemberGui;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.util.ChatUtils;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;

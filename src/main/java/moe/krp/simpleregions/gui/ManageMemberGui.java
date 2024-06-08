@@ -1,6 +1,7 @@
-package moe.krp.simpleregions.gui.item;
+package moe.krp.simpleregions.gui;
 
 import mc.obliviate.inventory.Gui;
+import moe.krp.simpleregions.gui.item.DeleteMemberIcon;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
