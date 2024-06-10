@@ -1,32 +1,33 @@
 package moe.krp.simpleregions.helpers;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.util.TimeUtils;
 
 import java.time.Duration;
 
-@Data
+@Data @NoArgsConstructor
 public class SignDefinition {
-    double cost;
+    Double cost;
     Vec3D location;
+
+    @Setter(AccessLevel.NONE)
     String originalDuration;
     String duration;
 
     transient String regionName;
 
-    public SignDefinition(
-            final double cost,
-            final Vec3D location,
-            final String originalDuration,
-            final String regionName
-    ) {
-        this.cost = cost;
-        this.location = location;
-        this.originalDuration = originalDuration;
-        this.duration = originalDuration;
-        this.regionName = regionName;
+    public void initDuration(final String duration) {
+        this.originalDuration = duration;
+        this.duration = duration;
+    }
+
+    public boolean isValid() {
+        return this.cost != null && this.location != null && this.originalDuration != null && this.duration != null && this.regionName != null;
     }
 
     public Duration tickDownTime(final Duration duration) {

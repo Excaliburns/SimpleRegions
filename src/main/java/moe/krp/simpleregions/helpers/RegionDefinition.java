@@ -1,14 +1,13 @@
 package moe.krp.simpleregions.helpers;
 
 import lombok.Data;
-import moe.krp.simpleregions.SimpleRegions;
-import moe.krp.simpleregions.util.ChatUtils;
 import moe.krp.simpleregions.util.ConfigUtils;
-import org.bukkit.util.BoundingBox;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -22,7 +21,7 @@ public class RegionDefinition {
     private UUID owner;
     private UUID creator;
     private SignDefinition relatedSign;
-    private List<UUID> otherAllowedPlayers;
+    private HashMap<UUID, String> otherAllowedPlayers;
 
     private transient RegionTypeConfiguration configuration;
     private transient boolean markedForDeletion;
@@ -37,11 +36,11 @@ public class RegionDefinition {
         this.regionType = regionType;
         this.configuration = ConfigUtils.getRegionTypeConfiguration(regionType);
         dirty = true;
-        otherAllowedPlayers = new ArrayList<>();
+        otherAllowedPlayers = new HashMap<>();
     }
 
     public void clearOwnerAndReset() {
-        this.otherAllowedPlayers = new ArrayList<>();
+        this.otherAllowedPlayers = new HashMap<>();
         this.owner = null;
         if (this.getRelatedSign() != null) {
             this.getRelatedSign().setDuration(this.getRelatedSign().getOriginalDuration());
@@ -56,15 +55,15 @@ public class RegionDefinition {
         return isWithin ? this : null;
     }
 
-    public Set<Vec3D> getEnvelopingChunkVecs() {
-        final HashSet<Vec3D> chunkVecs = new HashSet<>();
+    public Set<Vec3D> getEnvelopingChunkVectors() {
+        final HashSet<Vec3D> chunkVectors = new HashSet<>();
 
         for (int x = (int) lowerBound.getX(); x <= (int) upperBound.getX() + 15; x += 16) {
             for (int z = (int) lowerBound.getZ(); z <= (int) upperBound.getZ() + 15; z += 16) {
-                chunkVecs.add(new Vec3D(x >> 4, 0, z >> 4, world));
+                chunkVectors.add(new Vec3D(x >> 4, 0, z >> 4, world));
             }
         }
 
-        return chunkVecs;
+        return chunkVectors;
     }
 }

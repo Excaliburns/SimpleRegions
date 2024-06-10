@@ -14,7 +14,7 @@ public class ManageRegionGui extends Gui {
     final RegionDefinition regionDefinition;
 
     public ManageRegionGui(Player player, String id, RegionDefinition regionDefinition) {
-        super(player, id, "Manage " + regionDefinition.getRegionType(), 5);
+        super(player, id, "Manage " + regionDefinition.getRegionType(), 3);
         this.regionDefinition = regionDefinition;
     }
 
@@ -22,7 +22,7 @@ public class ManageRegionGui extends Gui {
     public void onOpen(InventoryOpenEvent event) {
         fillGui(new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
         addItem(10, new TimeRemainingIcon(regionDefinition));
-        addItem(28, new MemberManagementIcon(player, regionDefinition));
+        addItem(16, new MemberManagementIcon(player, regionDefinition));
     }
 
     public static String getManageRegionGuiId(String playerName) {

@@ -56,7 +56,7 @@ public class SimpleRegionsCommand implements TabExecutor {
                     return true;
                 }
 
-                return handleCreateRegion(creator, args[1], region, args[2], region.getWorld().getName());
+                handleCreateRegion(creator, args[1], region, args[2], region.getWorld().getName());
             }
             case "delete" -> handleDeleteRegion(sender, args[1]);
             case "info" -> handleRegionInfo(sender, args[1]);
@@ -111,111 +111,83 @@ public class SimpleRegionsCommand implements TabExecutor {
         return Collections.emptyList();
     }
 
-    private boolean handleRegionInfo(final CommandSender sender, final String regionName) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
-        if (def == null) {
-            ChatUtils.sendErrorMessage(sender, "Region not found");
-            return false;
-        }
-
-        ChatUtils.sendMessage(sender, String.format("Region: %s", def));
-
-        return true;
+    private void handleRegionInfo(final CommandSender sender, final String regionName) {
+        SimpleRegions.getStorageManager().getRegionByName(regionName)
+                     .ifPresentOrElse(def -> ChatUtils.sendMessage(sender, String.format("Region: %s", def)),
+                             () -> ChatUtils.sendErrorMessage(sender, "Region not found"));
     }
 
-    private boolean handleDeleteRegion(
+    private void handleDeleteRegion(
             final CommandSender sender,
             final String regionName
     ) {
         if (!sender.hasPermission("SimpleRegions.delete")) {
             ChatUtils.sendErrorMessage(sender, "You don't have permission to delete regions");
-            return false;
+            return;
         }
 
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
-        if (def == null) {
-            ChatUtils.sendErrorMessage(sender, "Region not found");
-            return false;
-        }
-
-        SimpleRegions.getStorageManager().markRegionForDelete(regionName);
-        ChatUtils.sendMessage(sender, String.format("Region %s deleted", regionName));
-
-        return true;
+        SimpleRegions.getStorageManager().getRegionByName(regionName)
+                .ifPresentOrElse(def -> {
+                    SimpleRegions.getStorageManager().markRegionForDelete(regionName);
+                    ChatUtils.sendMessage(sender, String.format("Region %s deleted", regionName));
+                }, () -> ChatUtils.sendErrorMessage(sender, "Region not found"));
     }
 
-    private boolean handleCreateRegion(
+    private void handleCreateRegion(
             final Player creator,
             final String regionName,
             final Region region,
             final String regionType,
             final String worldName
     ) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
-        if (def != null) {
-            ChatUtils.sendErrorMessage(creator, "Region already exists");
-            return false;
-        }
+        SimpleRegions.getStorageManager().getRegionByName(regionName)
+                .ifPresentOrElse( def -> ChatUtils.sendErrorMessage(creator, "Region " + regionName + " already exists"),
+                        () -> {
+                            if (!ConfigUtils.getRegionTypes().contains(regionType)) {
+                                ChatUtils.sendErrorMessage(creator, "Invalid region type");
+                                return;
+                            }
 
-        if (!ConfigUtils.getRegionTypes().contains(regionType)) {
-            ChatUtils.sendErrorMessage(creator, "Invalid region type");
-            return false;
-        }
+                            final boolean addRegion = SimpleRegions.getStorageManager().addRegion(
+                                    regionName, worldName, creator.getUniqueId(), regionType, region
+                            );
 
-        final boolean addRegion = SimpleRegions.getStorageManager().addRegion(
-                regionName, worldName, creator.getUniqueId(), regionType, region
-        );
-
-        if (addRegion) {
-            ChatUtils.sendMessage(creator, String.format("Region %s created", regionName));
-        }
-
-        return addRegion;
+                            if (addRegion) {
+                                ChatUtils.sendMessage(creator, String.format("Region %s created", regionName));
+                            }
+                });
     }
 
-    private boolean handleRegionVisualization(final CommandSender sender, final String regionName) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
+    private void handleRegionVisualization(final CommandSender sender, final String regionName) {
         if (!sender.hasPermission("SimpleRegions.visualize")) {
             ChatUtils.sendErrorMessage(sender, "You don't have permission to visualize regions");
-            return false;
+            return;
         }
 
-        if (def == null) {
-            ChatUtils.sendErrorMessage(sender, "Region not found.");
-            return false;
-        }
-
-        final Player player = (Player) sender;
-        // manager handles validation
-        VisualizationManager.displayVisualizationForRegion(player, def);
-
-        return true;
+        SimpleRegions.getStorageManager().getRegionByName(regionName).ifPresentOrElse(
+                def -> {
+                    final Player player = (Player) sender;
+                    // manager handles validation
+                    VisualizationManager.displayVisualizationForRegion(player, def);
+                }, () -> ChatUtils.sendErrorMessage(sender, "Region not found.")
+        );
     }
 
-    private boolean handleRegionSetOwner(final CommandSender sender, final String regionName, final String playerName) {
-        final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
+    private void handleRegionSetOwner(final CommandSender sender, final String regionName, final String playerName) {
         if (!sender.hasPermission("SimpleRegions.setOwner")) {
             ChatUtils.sendErrorMessage(sender, "You don't have permission to set region owners");
-            return false;
+            return;
         }
-
-        if (def == null) {
-            ChatUtils.sendErrorMessage(sender, "Region not found.");
-            return false;
-        }
-
-        final Player player = SimpleRegions.getInstance().getServer().getPlayer(playerName);
-        if (player == null) {
-            ChatUtils.sendErrorMessage(sender, "Player not found.");
-            return false;
-        }
-        if (def.getRelatedSign() != null) {
-
-        }
-        SimpleRegions.getStorageManager().setRegionOwned(regionName, player.getUniqueId());
-
-        ChatUtils.sendMessage(sender, String.format("Region %s is now owned by %s", regionName, playerName));
-
-        return true;
+        SimpleRegions.getStorageManager().getRegionByName(regionName).ifPresentOrElse(
+                def -> {
+                    final Player player = SimpleRegions.getInstance().getServer().getPlayer(playerName);
+                    if (player == null) {
+                        ChatUtils.sendErrorMessage(sender, "Player not found.");
+                        return;
+                    }
+                    SimpleRegions.getStorageManager().setRegionOwned(regionName, player.getUniqueId());
+                    ChatUtils.sendMessage(sender, String.format("Region %s is now owned by %s", regionName, playerName));
+                }, () -> ChatUtils.sendErrorMessage(sender, "Region not found.")
+        );
     }
 }

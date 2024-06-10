@@ -54,7 +54,8 @@ public class AddMemberIcon extends Icon {
                                 AnvilGUI.ResponseAction.run(
                                         () -> SimpleRegions.getStorageManager().addAllowedPlayer(
                                                 regionDefinition.getName(),
-                                                Bukkit.getOfflinePlayer(playerName).getUniqueId()
+                                                Bukkit.getOfflinePlayer(playerName).getUniqueId(),
+                                                playerName
                         )));
                     })
                     .text("Rename this!")

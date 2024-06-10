@@ -6,33 +6,74 @@ import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
 import moe.krp.simpleregions.util.ChatUtils;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+
+import java.util.function.Predicate;
 
 public class RegionListeners implements Listener {
     final static StorageManager storageManager = SimpleRegions.getStorageManager();
 
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent e) {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void placeBlockEvent(final BlockPlaceEvent e) {
         final Player player = e.getPlayer();
-        final Vec3D location = new Vec3D(e.getBlock().getLocation());
-        final RegionDefinition def = storageManager.findRegionByPoint(location);
-        if (def == null) {
-            return;
-        }
-
         if (player.hasPermission("SimpleRegions.bypass")) {
             return;
         }
 
-        if (
-                def.getOwner() == null
-                || !def.getOwner().equals(player.getUniqueId())
-                || !def.getOtherAllowedPlayers().contains(player.getUniqueId())
-        ) {
-            ChatUtils.sendErrorMessage(player, "You aren't allowed to break blocks in this region!");
-            e.setCancelled(true);
+        storageManager.findRegionByPoint(e.getBlockPlaced().getLocation())
+                .filter(playerCantBypass(player))
+                .ifPresent( def -> {
+                    ChatUtils.sendErrorMessage(player, "You aren't allowed to place blocks in this region!");
+                    e.setCancelled(true);
+                });
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void playerInteractEvent(final PlayerInteractEvent e) {
+        final Player player = e.getPlayer();
+        if (player.hasPermission("SimpleRegions.bypass")) {
+            return;
         }
+
+        if (!e.hasBlock() || e.getClickedBlock() == null) {
+            return;
+        }
+
+        storageManager.findRegionByPoint(e.getClickedBlock().getLocation())
+                      .filter(playerCantBypass(player))
+                      .ifPresent( def -> {
+                          ChatUtils.sendErrorMessage(player, "You aren't allowed to interact in this region!");
+                          e.setUseInteractedBlock(Event.Result.DENY);
+                          e.setUseItemInHand(Event.Result.DENY);
+                          e.setCancelled(true);
+                      });
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBlockBreak(final BlockBreakEvent e) {
+        final Player player = e.getPlayer();
+        if (player.hasPermission("SimpleRegions.bypass")) {
+            return;
+        }
+
+        final Vec3D location = new Vec3D(e.getBlock().getLocation());
+        storageManager.findRegionByPoint(location)
+                .filter(playerCantBypass(player))
+                .ifPresent(def -> {
+                    ChatUtils.sendErrorMessage(player, "You aren't allowed to break blocks in this region!");
+                    e.setCancelled(true);
+                });
+    }
+
+    private Predicate<? super RegionDefinition> playerCantBypass(final Player player) {
+        return (regionDefinition) -> regionDefinition.getOwner() == null
+                || !regionDefinition.getOwner().equals(player.getUniqueId())
+                || !regionDefinition.getOtherAllowedPlayers().containsKey(player.getUniqueId());
     }
 }

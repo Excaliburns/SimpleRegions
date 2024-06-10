@@ -12,7 +12,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class MemberManagementGui extends Gui {
@@ -29,16 +31,16 @@ public class MemberManagementGui extends Gui {
 
     @Override
     public void onOpen(InventoryOpenEvent event) {
-        int slots = 0;
-        for (final UUID otherPlayer : regionDefinition.getOtherAllowedPlayers()) {
-            if (slots > 26) break;
-            addItem(slots, new AdditionalOwnerIcon(
-                    ItemUtils.getSkullForPlayerUuid(otherPlayer, null),
+        AtomicInteger slot = new AtomicInteger(0);
+        regionDefinition.getOtherAllowedPlayers().forEach( (allowedPlayer, name) -> {
+            if (slot.get() > 26){
+                return;
+            }
+            addItem(slot.getAndIncrement(), new AdditionalOwnerIcon(
+                    ItemUtils.getSkullForPlayerUuid(allowedPlayer, name),
                     regionDefinition
             ));
-            slots++;
-        }
-
+        });
         final Consumer<InventoryClickEvent> onBack =
                 (e) -> new ManageRegionGui(player, ManageRegionGui.getManageRegionGuiId(player.getName()), regionDefinition).open();
 

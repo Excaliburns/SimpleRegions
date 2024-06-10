@@ -17,14 +17,27 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
-import java.time.Duration;
 import java.util.Objects;
 
 public class SignListener implements Listener {
     final private static StorageManager storageManager = SimpleRegions.getStorageManager();
+
+    @EventHandler
+    public void onBreakSign(BlockBreakEvent e) {
+        if (!(e.getBlock().getState() instanceof Sign)) {
+            return;
+        }
+        final RegionDefinition definition = storageManager.getRegionDefinitionBySignLocation(e.getBlock().getLocation());
+        if (definition == null) {
+            return;
+        }
+
+        storageManager.removeSign(definition.getName());
+    }
 
     @EventHandler
     public void onPlaceSign(BlockPlaceEvent e) {
@@ -111,38 +124,44 @@ public class SignListener implements Listener {
             return null;
         }
 
-        final RegionDefinition regionDef = storageManager.getRegionByName(regionName);
-        if (regionDef == null) {
-            ChatUtils.sendMessage(user, "Region " + regionName + " does not exist.");
-            return null;
-        }
-        if (regionDef.getRelatedSign() != null) {
-            ChatUtils.sendMessage(user, "A sign already exists for this region");
-            return null;
-        }
+        final SignDefinition signDef = new SignDefinition();
+        storageManager.getRegionByName(regionName)
+                .ifPresentOrElse(regionDef -> {
+                    if (regionDef.getRelatedSign() != null) {
+                        ChatUtils.sendMessage(user, "A sign already exists for this region");
+                        return;
+                    }
 
-        final double cost;
-        try {
-            cost = Double.parseDouble(costStr);
-        } catch (NumberFormatException ex) {
-            ChatUtils.sendMessage(user, "Invalid cost value.");
-            return null;
-        }
-        final Duration expireDuration;
-        try {
-            expireDuration = TimeUtils.getDurationFromTimeString(timeLimit);
-        } catch (IllegalArgumentException ex) {
-            ChatUtils.sendMessage(user, "Invalid duration value.");
-            return null;
-        }
+                    final double cost;
+                    try {
+                        cost = Double.parseDouble(costStr);
+                        signDef.setCost(cost);
+                    } catch (NumberFormatException ex) {
+                        ChatUtils.sendMessage(user, "Invalid cost value.");
+                        return;
+                    }
 
-        final SignDefinition signDef = new SignDefinition(cost, signLocation, TimeUtils.getTimeStringFromDuration(expireDuration), regionName);
-        final boolean success = SimpleRegions.getStorageManager().addSign(regionName, signDef);
+                    try {
+                        TimeUtils.getDurationFromTimeString(timeLimit);
+                        signDef.initDuration(timeLimit);
+                    } catch (IllegalArgumentException ex) {
+                        ChatUtils.sendMessage(user, "Invalid duration value.");
+                        return;
+                    }
 
-        if (success) {
-            ChatUtils.sendMessage(user, "Sign registered for region " + signDef.getRegionName());
-            resetWorldSign(sign, regionDef, cost);
-        }
+                    signDef.setLocation(signLocation);
+                    signDef.setRegionName(regionName);
+
+                    if (!signDef.isValid()) {
+                        ChatUtils.sendMessage(user, "Sign invalid for region " + signDef.getRegionName());
+                        return;
+                    }
+
+                    storageManager.addSign(regionName, signDef);
+
+                    ChatUtils.sendMessage(user, "Sign registered for region " + signDef.getRegionName());
+                    resetWorldSign(sign, regionDef, cost);
+                }, () -> ChatUtils.sendMessage(user, "Region " + regionName + " does not exist."));
 
         return signDef;
     }

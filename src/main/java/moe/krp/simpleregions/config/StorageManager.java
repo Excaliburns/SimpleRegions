@@ -12,6 +12,7 @@ import moe.krp.simpleregions.util.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -28,7 +29,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,29 +54,31 @@ public class StorageManager {
         signLocationMap = new ConcurrentHashMap<>();
     }
 
-    public RegionDefinition findRegionByPoint(final Vec3D point) {
+    public Optional<RegionDefinition> findRegionByPoint(final Location location) {
+        return findRegionByPoint(new Vec3D(location));
+    }
+
+    public Optional<RegionDefinition> findRegionByPoint(final Vec3D point) {
         final Vec3D chunkPoint = point.toChunkVec();
         final List<String> regionNames = chunkVecToRegionNameMap.get(chunkPoint);
         if (regionNames == null) {
-            return null;
+            return Optional.empty();
         }
 
         return regionNames
                 .stream()
                 .map(this::getRegionByName)
-                .filter(Objects::nonNull)
-                .filter(region -> !region.isMarkedForDeletion() && region.getRegionIfPointWithin(point) != null)
-                .findFirst()
-                .orElse(null);
+                .flatMap(Optional::stream)
+                .filter( region -> region.getRegionIfPointWithin(point) != null)
+                .findFirst();
     }
 
-    public RegionDefinition getRegionByName(String name) {
+    public Optional<RegionDefinition> getRegionByName(String name) {
         return allRegions
                 .stream()
                 .filter(region -> region.getName().equals(name))
                 .filter(region -> !region.isMarkedForDeletion())
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
     public boolean addRegion(String name, String worldName, UUID creator, String RegionType, Region region) {
@@ -116,69 +119,78 @@ public class StorageManager {
                 .collect(Collectors.toSet());
     }
 
+    public RegionDefinition getRegionDefinitionBySignLocation(final Location location) {
+        return getRegionDefinitionBySignLocation(new Vec3D(location));
+    }
+
     public RegionDefinition getRegionDefinitionBySignLocation(final Vec3D location) {
         return signLocationMap.get(location);
     }
 
     public void resetOwnership(final String regionName) {
-        final RegionDefinition regionDefinition = getRegionByName(regionName);
-        final Vec3D location = regionDefinition.getRelatedSign().getLocation();
-        final World world = Bukkit.getServer().getWorld(location.getWorld());
-        if (world != null) {
-            SignListener.resetWorldSign(
-                    (Sign) world.getBlockAt(location.toLocation()).getState(),
-                    SimpleRegions.getStorageManager().getRegionDefinitionBySignLocation(location),
-                    regionDefinition.getRelatedSign().getCost()
-            );
-        }
-        else {
-            SimpleRegions.log("World " + location.getWorld() + " does not exist while resetting ownership of " + regionDefinition.getName());
-        }
+        getRegionByName(regionName)
+                .ifPresent( region -> {
+                    final Vec3D location = region.getRelatedSign().getLocation();
+                    final World world = Bukkit.getServer().getWorld(location.getWorld());
+                    if (world != null) {
+                        SignListener.resetWorldSign(
+                                (Sign) world.getBlockAt(location.toLocation()).getState(),
+                                SimpleRegions.getStorageManager().getRegionDefinitionBySignLocation(location),
+                                region.getRelatedSign().getCost()
+                        );
+                    }
+                    else {
+                        SimpleRegions.log("World " + location.getWorld() + " does not exist while resetting ownership of " + region.getName());
+                    }
 
-        regionDefinition.clearOwnerAndReset();
+                    region.clearOwnerAndReset();
+                });
     }
 
-    public void addAllowedPlayer(final String regionName, final UUID player) {
-        final RegionDefinition region = getRegionByName(regionName);
-        if (region == null) {
-            return;
-        }
-        region.getOtherAllowedPlayers().add(player);
-        region.setDirty(true);
+    public void addAllowedPlayer(final String regionName, final UUID player, final String playerName) {
+        getRegionByName(regionName).ifPresent(
+                region-> {
+                    region.getOtherAllowedPlayers().put(player, playerName);
+                    region.setDirty(true);
+                }
+        );
     }
 
     public void removeAllowedPlayer(final String regionName, final UUID player) {
-        final RegionDefinition region = getRegionByName(regionName);
-        if (region == null) {
-            return;
-        }
-        region.getOtherAllowedPlayers().remove(player);
-        region.setDirty(true);
+        getRegionByName(regionName)
+                .ifPresent( region -> {
+                    region.getOtherAllowedPlayers().remove(player);
+                    region.setDirty(true);
+                });
     }
 
-    public boolean removeSign(String regionName) {
-        final RegionDefinition regionDefinition = getRegionByName(regionName);
-        if (regionDefinition == null) {
-            return false;
-        }
-        final SignDefinition signDefinition = regionDefinition.getRelatedSign();
-        regionDefinition.setRelatedSign(null);
-        regionDefinition.setDirty(true);
-        signLocationMap.remove(signDefinition.getLocation());
-        return true;
+    public void removeSign(String regionName) {
+        getRegionByName(regionName)
+                .ifPresentOrElse(region -> {
+                    final SignDefinition signDefinition = region.getRelatedSign();
+                    region.setRelatedSign(null);
+                    region.setDirty(true);
+                    signLocationMap.remove(signDefinition.getLocation());
+                }, () ->
+                        SimpleRegions.log(
+                                Level.SEVERE,
+                                String.format("Could not remove sign for region %s, was not found in map", regionName)
+                        )
+                );
     }
 
-    public boolean addSign(String regionName, SignDefinition signDefinition) {
-        final RegionDefinition regionDefinition = getRegionByName(regionName);
-        // Validation should be handled by calling method
-        if (regionDefinition == null) {
-            return false;
-        }
-
-        regionDefinition.setRelatedSign(signDefinition);
-        regionDefinition.setDirty(true);
-        signLocationMap.put(signDefinition.getLocation(), regionDefinition);
-        return true;
+    public void addSign(String regionName, SignDefinition signDefinition) {
+        getRegionByName(regionName).ifPresentOrElse(
+                region -> {
+                    region.setRelatedSign(signDefinition);
+                    region.setDirty(true);
+                    signLocationMap.put(signDefinition.getLocation(), region);
+                }, () ->
+                SimpleRegions.log(
+                        Level.SEVERE,
+                        String.format("Could not add sign for region %s, was not found in map", regionName)
+                )
+        );
     }
 
     public void initInMemoryStore() {
@@ -240,23 +252,20 @@ public class StorageManager {
             return;
         }
 
-        final RegionDefinition region = getRegionByName(regionName);
-        if (region == null) {
-            SimpleRegions.log(Level.INFO, "Region " + regionName + " not found during signage update.");
-            return;
-        }
+        getRegionByName(regionName)
+                .ifPresentOrElse( region -> {
+                    final BlockState blockState = getSignBlockStateForRegion(region);
+                    if (blockState instanceof Sign signBlock) {
+                        signBlock.line(0, Component.text(region.getName()).color(TextColor.color(0xFF5555)));
+                        signBlock.line(1, Component.text(player.getName()).color(TextColor.color(0xFFAA00)));
+                        signBlock.line(2, Component.text("Owned until:"));
+                        signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
+                        signBlock.update();
+                    }
 
-        final BlockState blockState = getSignBlockStateForRegion(region);
-        if (blockState instanceof Sign signBlock) {
-            signBlock.line(0, Component.text(region.getName()).color(TextColor.color(0xFF5555)));
-            signBlock.line(1, Component.text(player.getName()).color(TextColor.color(0xFFAA00)));
-            signBlock.line(2, Component.text("Owned until:"));
-            signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
-            signBlock.update();
-        }
-
-        region.setOwner(owner);
-        region.setDirty(true);
+                    region.setOwner(owner);
+                    region.setDirty(true);
+                }, () -> SimpleRegions.log(Level.SEVERE, "Region " + regionName + " not found during signage update."));
     }
 
     public void tickSigns(final Duration duration) {
@@ -283,7 +292,7 @@ public class StorageManager {
     }
 
     private void removeRegionFromChunkVecMap(final RegionDefinition regionDefinition) {
-        regionDefinition.getEnvelopingChunkVecs().forEach( vector ->
+        regionDefinition.getEnvelopingChunkVectors().forEach( vector ->
                 chunkVecToRegionNameMap.compute(vector, (vectorInMap, regionNames) -> {
                     if (regionNames != null) {
                         regionNames.remove(regionDefinition.getName());
@@ -293,7 +302,7 @@ public class StorageManager {
     }
 
     private void addRegionToChunkVecMap(final RegionDefinition region) {
-        region.getEnvelopingChunkVecs().forEach( vector ->
+        region.getEnvelopingChunkVectors().forEach( vector ->
                 chunkVecToRegionNameMap.compute(vector, (vectorInMap, regionNames) -> {
                     if (regionNames == null) {
                         regionNames = new ArrayList<>();
