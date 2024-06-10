@@ -14,18 +14,18 @@ permissions:
   SimpleRegions.*:
     description: SimpleRegions base permission
     children:
+      SimpleRegions.bypass:
+        description: Allows player to bypass region protection
       SimpleRegions.create:
         description: Allows player to create a new region definition
       SimpleRegions.delete:
         description: Allows player to delete a region definition
       SimpleRegions.info:
         description: Allows player to view information about a region definition
+      SimpleRegions.setOwner:
+        description: Allows player to set the owner of a region definition
       SimpleRegions.sign:
         description: Allows player to create, modify, or delete a region sign
         children:
             SimpleRegions.sign.create:
                 description: Allows player to create a region sign
-            SimpleRegions.sign.modify:
-                description: Allows player to modify a region sign
-            SimpleRegions.sign.delete:
-                description: Allows player to delete a region sign

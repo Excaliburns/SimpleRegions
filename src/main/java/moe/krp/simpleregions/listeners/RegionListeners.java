@@ -22,6 +22,9 @@ public class RegionListeners implements Listener {
             return;
         }
 
+        if (player.hasPermission("SimpleRegions.bypass")) {
+            return;
+        }
 
         if (
                 def.getOwner() == null

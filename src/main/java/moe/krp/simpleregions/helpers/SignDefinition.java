@@ -14,15 +14,19 @@ public class SignDefinition {
     String originalDuration;
     String duration;
 
+    transient String regionName;
+
     public SignDefinition(
             final double cost,
             final Vec3D location,
-            final String originalDuration
+            final String originalDuration,
+            final String regionName
     ) {
         this.cost = cost;
         this.location = location;
         this.originalDuration = originalDuration;
         this.duration = originalDuration;
+        this.regionName = regionName;
     }
 
     public Duration tickDownTime(final Duration duration) {

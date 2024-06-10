@@ -34,6 +34,11 @@ public class SimpleRegionsCommand implements TabExecutor {
                 final LocalSession session = WorldEdit.getInstance().getSessionManager().get(BukkitAdapter.adapt((Player) sender));
                 final Region region;
 
+                if (!creator.hasPermission("SimpleRegions.create")) {
+                    ChatUtils.sendErrorMessage(sender, "You don't have permission to create regions");
+                    return true;
+                }
+
                 if (args.length < 3) {
                     ChatUtils.sendMessage(sender, "Usage: /simpleregions create <regionName> <regionType>");
                     return true;
@@ -122,6 +127,11 @@ public class SimpleRegionsCommand implements TabExecutor {
             final CommandSender sender,
             final String regionName
     ) {
+        if (!sender.hasPermission("SimpleRegions.delete")) {
+            ChatUtils.sendErrorMessage(sender, "You don't have permission to delete regions");
+            return false;
+        }
+
         final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
         if (def == null) {
             ChatUtils.sendErrorMessage(sender, "Region not found");
@@ -165,6 +175,11 @@ public class SimpleRegionsCommand implements TabExecutor {
 
     private boolean handleRegionVisualization(final CommandSender sender, final String regionName) {
         final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
+        if (!sender.hasPermission("SimpleRegions.visualize")) {
+            ChatUtils.sendErrorMessage(sender, "You don't have permission to visualize regions");
+            return false;
+        }
+
         if (def == null) {
             ChatUtils.sendErrorMessage(sender, "Region not found.");
             return false;
@@ -179,6 +194,11 @@ public class SimpleRegionsCommand implements TabExecutor {
 
     private boolean handleRegionSetOwner(final CommandSender sender, final String regionName, final String playerName) {
         final RegionDefinition def = SimpleRegions.getStorageManager().getRegionByName(regionName);
+        if (!sender.hasPermission("SimpleRegions.setOwner")) {
+            ChatUtils.sendErrorMessage(sender, "You don't have permission to set region owners");
+            return false;
+        }
+
         if (def == null) {
             ChatUtils.sendErrorMessage(sender, "Region not found.");
             return false;
@@ -189,7 +209,9 @@ public class SimpleRegionsCommand implements TabExecutor {
             ChatUtils.sendErrorMessage(sender, "Player not found.");
             return false;
         }
+        if (def.getRelatedSign() != null) {
 
+        }
         SimpleRegions.getStorageManager().setRegionOwned(regionName, player.getUniqueId());
 
         ChatUtils.sendMessage(sender, String.format("Region %s is now owned by %s", regionName, playerName));

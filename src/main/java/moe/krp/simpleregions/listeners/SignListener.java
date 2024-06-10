@@ -17,6 +17,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
 import java.time.Duration;
@@ -26,85 +27,29 @@ public class SignListener implements Listener {
     final private static StorageManager storageManager = SimpleRegions.getStorageManager();
 
     @EventHandler
+    public void onPlaceSign(BlockPlaceEvent e) {
+        final Player user = e.getPlayer();
+        if (!(e.getBlockPlaced().getState() instanceof Sign sign)) {
+            return;
+        }
+        if (!validateSign(sign.line(0), user)) {
+            e.setCancelled(true);
+            return;
+        }
+
+        registerNewSign(sign, user);
+    }
+
+    @EventHandler
     public void onCreateSign(SignChangeEvent e) {
         final Player user = e.getPlayer();
-
-        if (Objects.equals(e.line(0), Component.text("[" + ConfigUtils.getDisplayName() + "]"))) {
-            if (!user.hasPermission("SimpleRegions.create")) {
-                ChatUtils.sendMessage(user, "You do not have permission to create a region sign");
-                e.setCancelled(true);
-                return;
-            }
-
-            final Vec3D signLocation = new Vec3D(e.getBlock().getLocation());
-            final Component regionNameLine = e.line(1);
-            final Component costLine = e.line(2);
-            final Component timeLimitLine = e.line(3);
-            if (regionNameLine == null || costLine == null || timeLimitLine == null) {
-                final String errorMessage = "Sign components were null when creating sign for " + e.getPlayer()
-                                                                                                   .getName();
-                SimpleRegions.log(errorMessage);
-                ChatUtils.sendMessage(user, errorMessage);
-                return;
-            }
-
-            final String regionName = PlainTextComponentSerializer.plainText()
-                                                                  .serialize(regionNameLine);
-            final String costStr = PlainTextComponentSerializer.plainText()
-                                                               .serialize(costLine);
-            final String timeLimit = PlainTextComponentSerializer.plainText()
-                                                                 .serialize(timeLimitLine);
-            if (regionName.isEmpty() || regionName.isBlank()) {
-                ChatUtils.sendMessage(user, "Please specify a region name.");
-                return;
-            }
-            if (costStr.isEmpty() || costStr.isBlank()) {
-                ChatUtils.sendMessage(user, "Please specify a region cost.");
-                return;
-            }
-            if (timeLimit.isEmpty() || timeLimit.isBlank()) {
-                ChatUtils.sendMessage(user, "Please specify a time limit, or \"Unlimited\", if it is unlimited.");
-                return;
-            }
-
-            final RegionDefinition regionDef = storageManager.getRegionByName(regionName);
-            if (regionDef == null) {
-                ChatUtils.sendMessage(user, "Region " + regionName + " does not exist.");
-                return;
-            }
-            if (regionDef.getRelatedSign() != null) {
-                ChatUtils.sendMessage(user, "A sign already exists for this region");
-                e.setCancelled(true);
-                return;
-            }
-            
-            final double cost;
-            try {
-                cost = Double.parseDouble(costStr);
-            } catch (NumberFormatException ex) {
-                ChatUtils.sendMessage(user, "Invalid cost value.");
-                return;
-            }
-            final Duration expireDuration;
-            try {
-                expireDuration = TimeUtils.getDurationFromTimeString(timeLimit);
-            } catch (IllegalArgumentException ex) {
-                SimpleRegions.log(ex);
-                return;
-            }
-
-            final SignDefinition signDef = new SignDefinition(cost, signLocation, TimeUtils.getTimeStringFromDuration(expireDuration));
-
-            final boolean success = SimpleRegions.getStorageManager()
-                                                 .addSign(regionName, signDef);
-
-            if (success) {
-                ChatUtils.sendMessage(user, "Sign registered for region " + regionName);
-                if (e.getBlock().getState() instanceof Sign sign) {
-                    resetWorldSign(sign, regionDef, cost);
-                }
-            }
+        final Sign sign = (Sign) e.getBlock().getState();
+        if (!validateSign(e.line(0), user)) {
+            e.setCancelled(true);
+            return;
         }
+
+        registerNewSign(sign, user);
     }
 
     public static void resetWorldSign(final Sign e, final RegionDefinition regionDef, final double cost) {
@@ -126,5 +71,79 @@ public class SignListener implements Listener {
         }
 
         Bukkit.getScheduler().runTaskLater(SimpleRegions.getInstance(), () -> e.update(), 20L);
+    }
+
+    private boolean validateSign(final Component line0, final Player user) {
+        if (!Objects.equals(line0, Component.text("[" + ConfigUtils.getDisplayName() + "]"))) {
+            return false;
+        }
+
+        if (!user.hasPermission("SimpleRegions.create")) {
+            ChatUtils.sendMessage(user, "You do not have permission to create a region sign");
+            return false;
+        }
+
+        return true;
+    }
+
+    private SignDefinition registerNewSign(final Sign sign, final Player user) {
+        final Vec3D signLocation = new Vec3D(sign.getLocation());
+        final Component regionNameLine = sign.line(1);
+        final Component costLine = sign.line(2);
+        final Component timeLimitLine = sign.line(3);
+
+        final String regionName = PlainTextComponentSerializer.plainText()
+                                                              .serialize(regionNameLine);
+        final String costStr = PlainTextComponentSerializer.plainText()
+                                                           .serialize(costLine);
+        final String timeLimit = PlainTextComponentSerializer.plainText()
+                                                             .serialize(timeLimitLine);
+        if (regionName.isEmpty() || regionName.isBlank()) {
+            ChatUtils.sendMessage(user, "Please specify a region name.");
+            return null;
+        }
+        if (costStr.isEmpty() || costStr.isBlank()) {
+            ChatUtils.sendMessage(user, "Please specify a region cost.");
+            return null;
+        }
+        if (timeLimit.isEmpty() || timeLimit.isBlank()) {
+            ChatUtils.sendMessage(user, "Please specify a time limit, or \"Unlimited\", if it is unlimited.");
+            return null;
+        }
+
+        final RegionDefinition regionDef = storageManager.getRegionByName(regionName);
+        if (regionDef == null) {
+            ChatUtils.sendMessage(user, "Region " + regionName + " does not exist.");
+            return null;
+        }
+        if (regionDef.getRelatedSign() != null) {
+            ChatUtils.sendMessage(user, "A sign already exists for this region");
+            return null;
+        }
+
+        final double cost;
+        try {
+            cost = Double.parseDouble(costStr);
+        } catch (NumberFormatException ex) {
+            ChatUtils.sendMessage(user, "Invalid cost value.");
+            return null;
+        }
+        final Duration expireDuration;
+        try {
+            expireDuration = TimeUtils.getDurationFromTimeString(timeLimit);
+        } catch (IllegalArgumentException ex) {
+            ChatUtils.sendMessage(user, "Invalid duration value.");
+            return null;
+        }
+
+        final SignDefinition signDef = new SignDefinition(cost, signLocation, TimeUtils.getTimeStringFromDuration(expireDuration), regionName);
+        final boolean success = SimpleRegions.getStorageManager().addSign(regionName, signDef);
+
+        if (success) {
+            ChatUtils.sendMessage(user, "Sign registered for region " + signDef.getRegionName());
+            resetWorldSign(sign, regionDef, cost);
+        }
+
+        return signDef;
     }
 }
