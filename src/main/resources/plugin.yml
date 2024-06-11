@@ -10,6 +10,8 @@ commands:
     aliases: [sr, simpler, sregions]
     description: SimpleRegions base command
     usage: /<command> [subcommand]
+    permission: SimpleRegions.*
+    permission-message: You do not have permission to use this command
 permissions:
   SimpleRegions.*:
     description: SimpleRegions base permission

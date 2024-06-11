@@ -13,6 +13,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,6 +22,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
+import java.util.List;
 import java.util.Objects;
 
 public class SignListener implements Listener {
@@ -36,6 +38,8 @@ public class SignListener implements Listener {
             return;
         }
 
+        ChatUtils.sendMessage(e.getPlayer(), "Region ownership reset for region " + definition.getName());
+        storageManager.resetOwnership(definition.getName());
         storageManager.removeSign(definition.getName());
     }
 
@@ -46,23 +50,35 @@ public class SignListener implements Listener {
             return;
         }
         if (!validateSign(sign.line(0), user)) {
-            e.setCancelled(true);
             return;
         }
 
-        registerNewSign(sign, user);
+        registerNewSign(new Vec3D(e.getBlock().getLocation()), sign.lines(), user);
     }
 
     @EventHandler
     public void onCreateSign(SignChangeEvent e) {
         final Player user = e.getPlayer();
-        final Sign sign = (Sign) e.getBlock().getState();
         if (!validateSign(e.line(0), user)) {
-            e.setCancelled(true);
             return;
         }
 
-        registerNewSign(sign, user);
+        registerNewSign(new Vec3D(e.getBlock().getLocation()), e.lines(), user);
+    }
+
+    public static void resetWorldSign(final Vec3D signLocation, final RegionDefinition regionDefinition, final double cost) {
+        final World world = Bukkit.getServer()
+                                  .getWorld(signLocation.getWorld());
+        if (world == null) {
+            return;
+        }
+        final Sign sign = (Sign) world.getBlockAt(signLocation.toLocation()).getState();
+
+        resetWorldSign(
+                sign,
+                regionDefinition,
+                cost
+        );
     }
 
     public static void resetWorldSign(final Sign e, final RegionDefinition regionDef, final double cost) {
@@ -99,11 +115,14 @@ public class SignListener implements Listener {
         return true;
     }
 
-    private SignDefinition registerNewSign(final Sign sign, final Player user) {
-        final Vec3D signLocation = new Vec3D(sign.getLocation());
-        final Component regionNameLine = sign.line(1);
-        final Component costLine = sign.line(2);
-        final Component timeLimitLine = sign.line(3);
+    private SignDefinition registerNewSign(
+            final Vec3D signLocation,
+            final List<Component> lines,
+            final Player user
+    ) {
+        final Component regionNameLine = lines.get(1);
+        final Component costLine = lines.get(2);
+        final Component timeLimitLine = lines.get(3);
 
         final String regionName = PlainTextComponentSerializer.plainText()
                                                               .serialize(regionNameLine);
@@ -160,7 +179,7 @@ public class SignListener implements Listener {
                     storageManager.addSign(regionName, signDef);
 
                     ChatUtils.sendMessage(user, "Sign registered for region " + signDef.getRegionName());
-                    resetWorldSign(sign, regionDef, cost);
+                    resetWorldSign(signLocation, regionDef, cost);
                 }, () -> ChatUtils.sendMessage(user, "Region " + regionName + " does not exist."));
 
         return signDef;

@@ -40,8 +40,7 @@ public class PlayerActionListener implements Listener {
             return;
         }
 
-        if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE) && event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
-            storageManager.removeSign(def.getName());
+        if (event.getPlayer().hasPermission("SimpleRegions.delete")) {
             return;
         }
 
