@@ -40,7 +40,7 @@ public class PlayerActionListener implements Listener {
             return;
         }
 
-        if (event.getPlayer().hasPermission("SimpleRegions.delete")) {
+        if (event.getPlayer().hasPermission("SimpleRegions.delete") && event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
             return;
         }
 

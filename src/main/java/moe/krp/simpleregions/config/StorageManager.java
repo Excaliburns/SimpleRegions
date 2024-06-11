@@ -194,18 +194,18 @@ public class StorageManager {
     }
 
     public void initInMemoryStore() {
-        final File RegionsDir = new File(SimpleRegions.getInstance().getDataFolder().getAbsolutePath() + "/Regions");
-        if (!RegionsDir.exists()) {
+        final File regionsDr = new File(SimpleRegions.getInstance().getDataFolder().getAbsolutePath() + "/regions");
+        if (!regionsDr.exists()) {
             SimpleRegions.log(Level.SEVERE, "No Region directory, if this is your first time starting with this plugin, ignore this!");
             return;
         }
-        File[] RegionFiles = RegionsDir.listFiles();
-        if (RegionFiles == null) {
+        File[] regionFiles = regionsDr.listFiles();
+        if (regionFiles == null) {
             SimpleRegions.log(Level.SEVERE, "Failed to list files in Regions directory");
             return;
         }
 
-        for (final File file : RegionFiles) {
+        for (final File file : regionFiles) {
             try {
                 final String contents = Files.readString(file.toPath());
                 final RegionDefinition region = gson.fromJson(contents, RegionDefinition.class);
