@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 public class RegionListeners implements Listener {
     final static StorageManager storageManager = SimpleRegions.getStorageManager();
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void placeBlockEvent(final BlockPlaceEvent e) {
         final Player player = e.getPlayer();
         if (player.hasPermission("SimpleRegions.bypass")) {
@@ -27,7 +27,7 @@ public class RegionListeners implements Listener {
         }
 
         storageManager.findRegionByPoint(e.getBlockPlaced().getLocation())
-                .filter(playerCantBypass(player))
+                .filter(playerNotAllowed(player))
                 .ifPresent( def -> {
                     ChatUtils.sendErrorMessage(player, "You aren't allowed to place blocks in this region!");
                     e.setCancelled(true);
@@ -46,7 +46,7 @@ public class RegionListeners implements Listener {
         }
 
         storageManager.findRegionByPoint(e.getClickedBlock().getLocation())
-                      .filter(playerCantBypass(player))
+                      .filter(playerNotAllowed(player))
                       .ifPresent( def -> {
                           ChatUtils.sendErrorMessage(player, "You aren't allowed to interact in this region!");
                           e.setUseInteractedBlock(Event.Result.DENY);
@@ -64,16 +64,15 @@ public class RegionListeners implements Listener {
 
         final Vec3D location = new Vec3D(e.getBlock().getLocation());
         storageManager.findRegionByPoint(location)
-                .filter(playerCantBypass(player))
+                .filter(playerNotAllowed(player))
                 .ifPresent(def -> {
                     ChatUtils.sendErrorMessage(player, "You aren't allowed to break blocks in this region!");
                     e.setCancelled(true);
                 });
     }
 
-    private Predicate<? super RegionDefinition> playerCantBypass(final Player player) {
-        return (regionDefinition) -> regionDefinition.getOwner() == null
-                || !regionDefinition.getOwner().equals(player.getUniqueId())
-                || !regionDefinition.getOtherAllowedPlayers().containsKey(player.getUniqueId());
+    private Predicate<? super RegionDefinition> playerNotAllowed(final Player player) {
+        return (regionDefinition) -> regionDefinition.getOwner() == null ||
+                (!regionDefinition.getOwner().equals(player.getUniqueId()) || !regionDefinition.getOtherAllowedPlayers().containsKey(player.getUniqueId()));
     }
 }
