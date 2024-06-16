@@ -39,6 +39,12 @@ public class RegionDefinition {
         otherAllowedPlayers = new HashMap<>();
     }
 
+    public void setRegionType(final String regionType) {
+        this.regionType = regionType;
+        this.configuration = ConfigUtils.getRegionTypeConfiguration(regionType);
+        this.dirty = true;
+    }
+
     public void clearOwnerAndReset() {
         this.otherAllowedPlayers = new HashMap<>();
         this.owner = null;

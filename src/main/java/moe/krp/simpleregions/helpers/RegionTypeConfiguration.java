@@ -13,4 +13,5 @@ public class RegionTypeConfiguration {
     final Boolean upkeep;
     final Duration upkeepInterval;
     final Double upkeepCost;
+    final Integer ownerLimit;
 }

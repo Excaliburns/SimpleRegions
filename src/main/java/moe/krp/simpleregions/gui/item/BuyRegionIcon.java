@@ -36,6 +36,16 @@ public class BuyRegionIcon extends Icon {
             if (onlinePlayer != null) {
                 onlinePlayer.closeInventory();
             }
+            final int playerOwnedCells = SimpleRegions.getStorageManager().getNumberOfOwnedRegionsForPlayer(
+                    regionDefinition.getRegionType(),
+                    player.getUniqueId()
+            );
+
+            if (regionDefinition.getConfiguration().getOwnerLimit() <= playerOwnedCells) {
+                ChatUtils.sendErrorMessage(player.getPlayer(), "You own too many of this type of cell!");
+                return;
+            }
+
 
             if (SimpleRegions.getEconomy().getBalance(player) < regionDefinition.getRelatedSign().getCost()) {
                 ChatUtils.sendErrorMessage(player.getPlayer(), "You don't have enough money to buy this region!");

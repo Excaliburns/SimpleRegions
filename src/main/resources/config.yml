@@ -9,6 +9,7 @@ region-type-configuration:
     buy-sign-line-zero-color: '#136F63'
     buy-sign-line-zero: '[RENT]'
     remove-items-on-expiry: false
+    owner-limit: 3
   BlackMarket:
     remove-items-on-expiry: true
   CourtYard-Small:

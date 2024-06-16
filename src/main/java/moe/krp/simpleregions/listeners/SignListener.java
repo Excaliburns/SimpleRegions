@@ -160,12 +160,17 @@ public class SignListener implements Listener {
                         return;
                     }
 
-                    try {
-                        TimeUtils.getDurationFromTimeString(timeLimit);
-                        signDef.initDuration(timeLimit);
-                    } catch (IllegalArgumentException ex) {
-                        ChatUtils.sendMessage(user, "Invalid duration value.");
-                        return;
+                    if (!timeLimit.equalsIgnoreCase("infinite")) {
+                        try {
+                            TimeUtils.getDurationFromTimeString(timeLimit);
+                            signDef.initDuration(timeLimit);
+                        } catch (IllegalArgumentException ex) {
+                            ChatUtils.sendMessage(user, "Invalid duration value.");
+                            return;
+                        }
+                    }
+                    else {
+                        signDef.initInfiniteDuration();
                     }
 
                     signDef.setLocation(signLocation);

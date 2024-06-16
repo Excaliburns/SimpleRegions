@@ -39,6 +39,7 @@ public class ConfigUtils {
                 .upkeep(configuration.getBoolean(path + ".upkeep"))
                 .upkeepInterval(TimeUtils.getDurationFromTimeString(configuration.getString(path + ".upkeep-interval")))
                 .upkeepCost(configuration.getDouble(path + ".upkeep-cost"))
+                .ownerLimit(configuration.getInt(path + ".owner-limit"))
                 .build();
     }
 }

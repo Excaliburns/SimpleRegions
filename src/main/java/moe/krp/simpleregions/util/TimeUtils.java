@@ -27,6 +27,7 @@ public class TimeUtils {
                 case "h" -> isNegative ? duration.minusHours(timeValue) : duration.plusHours(timeValue);
                 case "m" -> isNegative ? duration.minusMinutes(timeValue) : duration.plusMinutes(timeValue);
                 case "s" -> isNegative ? duration.minusSeconds(timeValue) : duration.plusSeconds(timeValue);
+                case "mo" -> isNegative ? duration.minusDays(30*timeValue) : duration.plusDays(30*timeValue);
                 default -> throw new IllegalArgumentException("Invalid time unit: " + token);
             };
 

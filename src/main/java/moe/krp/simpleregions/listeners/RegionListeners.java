@@ -73,6 +73,6 @@ public class RegionListeners implements Listener {
 
     private Predicate<? super RegionDefinition> playerNotAllowed(final Player player) {
         return (regionDefinition) -> regionDefinition.getOwner() == null ||
-                (!regionDefinition.getOwner().equals(player.getUniqueId()) || !regionDefinition.getOtherAllowedPlayers().containsKey(player.getUniqueId()));
+                (!regionDefinition.getOwner().equals(player.getUniqueId()) && !regionDefinition.getOtherAllowedPlayers().containsKey(player.getUniqueId()));
     }
 }

@@ -111,6 +111,15 @@ public class StorageManager {
                 });
     }
 
+    public int getNumberOfOwnedRegionsForPlayer(final String regionType, final UUID player) {
+        return allRegions
+                .stream()
+                .filter( regionDefinition -> regionDefinition.getRegionType().equals(regionType))
+                .filter( regionDefinition -> regionDefinition.getOwner() != null && regionDefinition.getOwner().equals(player))
+                .collect(Collectors.toSet())
+                .size();
+    }
+
     public Set<String> getRegionNames() {
         return allRegions
                 .stream()
@@ -125,6 +134,11 @@ public class StorageManager {
 
     public RegionDefinition getRegionDefinitionBySignLocation(final Vec3D location) {
         return signLocationMap.get(location);
+    }
+
+    public void setType(final String regionName, final String regionType) {
+        getRegionByName(regionName)
+                .ifPresent( region -> region.setRegionType(regionType));
     }
 
     public void resetOwnership(final String regionName) {

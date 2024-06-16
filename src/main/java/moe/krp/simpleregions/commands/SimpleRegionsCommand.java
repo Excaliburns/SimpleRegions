@@ -62,6 +62,8 @@ public class SimpleRegionsCommand implements TabExecutor {
             case "info" -> handleRegionInfo(sender, args[1]);
             case "visualize" -> handleRegionVisualization(sender, args[1]);
             case "setOwner" -> handleRegionSetOwner(sender, args[1], args[2]);
+            case "clearOwner" -> handleRegionClearOwner(sender, args[1]);
+            case "setType" -> handleRegionSetType(sender, args[1], args[2]);
         }
 
         return true;
@@ -70,7 +72,7 @@ public class SimpleRegionsCommand implements TabExecutor {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1) {
-            return List.of("create", "delete", "info", "visualize", "setOwner");
+            return List.of("create", "delete", "info", "visualize", "setOwner", "clearOwner", "setType");
         }
 
         if (args.length == 2 && args[0].equals("create")) {
@@ -95,6 +97,21 @@ public class SimpleRegionsCommand implements TabExecutor {
             return SimpleRegions.getStorageManager().getRegionNames()
                               .stream().filter(regionName -> regionName.startsWith(args[1]))
                               .collect(Collectors.toList());
+        }
+        else if (args.length == 2 && args[0].equals("clearOwner")) {
+            return SimpleRegions.getStorageManager().getRegionNames()
+                                .stream().filter(regionName -> regionName.startsWith(args[1]))
+                                .collect(Collectors.toList());
+        }
+        else if (args.length == 2 && args[0].equals("setType")) {
+            return SimpleRegions.getStorageManager().getRegionNames()
+                                .stream().filter(regionName -> regionName.startsWith(args[1]))
+                                .collect(Collectors.toList());
+        }
+        else if (args.length == 3 && args[0].equals("setType")) {
+            return ConfigUtils.getRegionTypes()
+                                .stream().filter(type -> type.startsWith(args[2]))
+                                .collect(Collectors.toList());
         }
         else if (args.length == 2 && args[0].equals("setOwner")) {
             return SimpleRegions.getStorageManager().getRegionNames()
@@ -171,6 +188,28 @@ public class SimpleRegionsCommand implements TabExecutor {
                     VisualizationManager.displayVisualizationForRegion(player, def);
                 }, () -> ChatUtils.sendErrorMessage(sender, "Region not found.")
         );
+    }
+
+    private void handleRegionSetType(final CommandSender sender, final String regionName, final String regionType) {
+        if (sender.hasPermission("SimpleRegions.setType")) {
+            ChatUtils.sendErrorMessage(sender, "You don't have permission to set region types");
+            return;
+        }
+        if (!ConfigUtils.getRegionTypes().contains(regionType)) {
+            ChatUtils.sendErrorMessage(sender, "That region type does not exist!");
+            return;
+        }
+
+        SimpleRegions.getStorageManager().setType(regionName, regionType);
+    }
+
+    private void handleRegionClearOwner(final CommandSender sender, final String regionName) {
+        if (!sender.hasPermission("SimpleRegions.clearOwner")) {
+            ChatUtils.sendErrorMessage(sender, "You don't have permission to clear region owners");
+            return;
+        }
+
+        SimpleRegions.getStorageManager().resetOwnership(regionName);
     }
 
     private void handleRegionSetOwner(final CommandSender sender, final String regionName, final String playerName) {
