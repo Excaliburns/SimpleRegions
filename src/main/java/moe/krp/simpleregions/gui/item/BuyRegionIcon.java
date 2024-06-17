@@ -59,7 +59,7 @@ public class BuyRegionIcon extends Icon {
             SimpleRegions.getEconomy()
                          .withdrawPlayer(player, regionDefinition.getRelatedSign().getCost());
             SimpleRegions.getStorageManager()
-                         .setRegionOwned(regionDefinition.getName(), player.getUniqueId());
+                         .setRegionOwned(regionDefinition.getName(), player.getUniqueId(), player.getName());
         });
     }
 }

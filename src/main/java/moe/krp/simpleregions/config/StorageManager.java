@@ -1,5 +1,6 @@
 package moe.krp.simpleregions.config;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sk89q.worldedit.regions.Region;
@@ -13,6 +14,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -257,21 +259,19 @@ public class StorageManager {
 
     public void setRegionOwned(
             final String regionName,
-            final UUID owner
+            final UUID owner,
+            final String name
     ) {
-        final Player player = Bukkit.getPlayer(owner);
-        if (player == null) {
-            SimpleRegions.log(Level.INFO, "Player not found during signage update for region " + regionName + ".");
-            SimpleRegions.log("Player UUID: " + owner);
-            return;
-        }
+        final PlayerProfile profile = Bukkit.createProfile(owner, name);
+        final String displayName = profile.getName() != null ? profile.getName() : name != null ? name : owner.toString();
+
 
         getRegionByName(regionName)
                 .ifPresentOrElse( region -> {
                     final BlockState blockState = getSignBlockStateForRegion(region);
                     if (blockState instanceof Sign signBlock) {
                         signBlock.line(0, Component.text(region.getName()).color(TextColor.color(0xFF5555)));
-                        signBlock.line(1, Component.text(player.getName()).color(TextColor.color(0xFFAA00)));
+                        signBlock.line(1, Component.text(displayName).color(TextColor.color(0xFFAA00)));
                         signBlock.line(2, Component.text("Owned until:"));
                         signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
                         signBlock.update();

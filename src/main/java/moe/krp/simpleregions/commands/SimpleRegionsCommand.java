@@ -191,7 +191,7 @@ public class SimpleRegionsCommand implements TabExecutor {
     }
 
     private void handleRegionSetType(final CommandSender sender, final String regionName, final String regionType) {
-        if (sender.hasPermission("SimpleRegions.setType")) {
+        if (!sender.hasPermission("SimpleRegions.setType")) {
             ChatUtils.sendErrorMessage(sender, "You don't have permission to set region types");
             return;
         }
@@ -199,8 +199,14 @@ public class SimpleRegionsCommand implements TabExecutor {
             ChatUtils.sendErrorMessage(sender, "That region type does not exist!");
             return;
         }
+        if (!SimpleRegions.getStorageManager().getRegionNames()
+                         .contains(regionName)) {
+            ChatUtils.sendErrorMessage(sender, "That region does not exist!");
+            return;
+        }
 
         SimpleRegions.getStorageManager().setType(regionName, regionType);
+        ChatUtils.sendMessage(sender, "Set type to " + regionType);
     }
 
     private void handleRegionClearOwner(final CommandSender sender, final String regionName) {
@@ -210,6 +216,7 @@ public class SimpleRegionsCommand implements TabExecutor {
         }
 
         SimpleRegions.getStorageManager().resetOwnership(regionName);
+        ChatUtils.sendMessage(sender, "Cleared owner of " + regionName);
     }
 
     private void handleRegionSetOwner(final CommandSender sender, final String regionName, final String playerName) {
@@ -224,7 +231,7 @@ public class SimpleRegionsCommand implements TabExecutor {
                         ChatUtils.sendErrorMessage(sender, "Player not found.");
                         return;
                     }
-                    SimpleRegions.getStorageManager().setRegionOwned(regionName, player.getUniqueId());
+                    SimpleRegions.getStorageManager().setRegionOwned(regionName, player.getUniqueId(), player.getName());
                     ChatUtils.sendMessage(sender, String.format("Region %s is now owned by %s", regionName, playerName));
                 }, () -> ChatUtils.sendErrorMessage(sender, "Region not found.")
         );

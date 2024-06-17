@@ -1,7 +1,8 @@
 package moe.krp.simpleregions.gui;
 
 import mc.obliviate.inventory.Gui;
-import moe.krp.simpleregions.gui.item.BuyRegionIcon;
+import moe.krp.simpleregions.gui.item.ChangeOwnerIcon;
+import moe.krp.simpleregions.gui.item.ClearOwnerIcon;
 import moe.krp.simpleregions.gui.item.MemberManagementIcon;
 import moe.krp.simpleregions.gui.item.TimeRemainingIcon;
 import moe.krp.simpleregions.helpers.RegionDefinition;
@@ -22,6 +23,8 @@ public class ManageRegionGui extends Gui {
     public void onOpen(InventoryOpenEvent event) {
         fillGui(new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
         addItem(10, new TimeRemainingIcon(regionDefinition));
+        addItem(12, new ClearOwnerIcon(regionDefinition, player));
+        addItem(14, new ChangeOwnerIcon(regionDefinition));
         addItem(16, new MemberManagementIcon(player, regionDefinition));
     }
 

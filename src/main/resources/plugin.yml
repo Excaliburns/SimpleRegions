@@ -26,6 +26,10 @@ permissions:
         description: Allows player to view information about a region definition
       SimpleRegions.setOwner:
         description: Allows player to set the owner of a region definition
+      SimpleRegions.clearOwner:
+        description: Allows player to clear the owner of a region definition
+      SimpleRegions.setType:
+        description: Allows player to set the type of a region definition
       SimpleRegions.sign:
         description: Allows player to create, modify, or delete a region sign
         children:
