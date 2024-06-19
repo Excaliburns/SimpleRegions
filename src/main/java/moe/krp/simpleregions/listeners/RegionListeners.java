@@ -2,9 +2,13 @@ package moe.krp.simpleregions.listeners;
 
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.config.StorageManager;
+import moe.krp.simpleregions.enums.InteractionType;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
 import moe.krp.simpleregions.util.ChatUtils;
+import moe.krp.simpleregions.util.ConfigUtils;
+import org.bukkit.Material;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -14,7 +18,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-import java.util.function.Predicate;
+import java.util.Optional;
 
 public class RegionListeners implements Listener {
     final static StorageManager storageManager = SimpleRegions.getStorageManager();
@@ -27,7 +31,7 @@ public class RegionListeners implements Listener {
         }
 
         storageManager.findRegionByPoint(e.getBlockPlaced().getLocation())
-                .filter(playerNotAllowed(player))
+                .filter(ConfigUtils.playerAllowed(player, InteractionType.PLACE_BLOCK).negate())
                 .ifPresent( def -> {
                     ChatUtils.sendErrorMessage(player, "You aren't allowed to place blocks in this region!");
                     e.setCancelled(true);
@@ -44,15 +48,32 @@ public class RegionListeners implements Listener {
         if (!e.hasBlock() || e.getClickedBlock() == null) {
             return;
         }
-
         storageManager.findRegionByPoint(e.getClickedBlock().getLocation())
-                      .filter(playerNotAllowed(player))
-                      .ifPresent( def -> {
-                          ChatUtils.sendErrorMessage(player, "You aren't allowed to interact in this region!");
-                          e.setUseInteractedBlock(Event.Result.DENY);
-                          e.setUseItemInHand(Event.Result.DENY);
-                          e.setCancelled(true);
-                      });
+                .ifPresent( regionDefinition -> {
+                    InteractionType type;
+                    if (e.getClickedBlock().getType().equals(Material.CHEST)) {
+                        type = InteractionType.CHEST;
+                    }
+                    else if (regionDefinition.getRelatedSign() != null
+                            && regionDefinition.getOwner() == null
+                            && regionDefinition.getRelatedSign().getLocation().equals(new Vec3D(e.getClickedBlock().getLocation()))
+                    ) {
+                        type = InteractionType.BUY;
+                    }
+                    else if (e.getClickedBlock().getState() instanceof Sign) {
+                        type = InteractionType.SIGN;
+                    }
+                    else {
+                        type = InteractionType.INTERACT;
+                    }
+                    boolean allowed = ConfigUtils.playerAllowed(player, type).test(regionDefinition);
+                    if (!allowed) {
+                        ChatUtils.sendErrorMessage(player, "You aren't allowed to interact in this region!");
+                        e.setUseInteractedBlock(Event.Result.DENY);
+                        e.setUseItemInHand(Event.Result.DENY);
+                        e.setCancelled(true);
+                    }
+                });
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -64,15 +85,10 @@ public class RegionListeners implements Listener {
 
         final Vec3D location = new Vec3D(e.getBlock().getLocation());
         storageManager.findRegionByPoint(location)
-                .filter(playerNotAllowed(player))
+                .filter(ConfigUtils.playerAllowed(player, InteractionType.BREAK_BLOCK).negate())
                 .ifPresent(def -> {
                     ChatUtils.sendErrorMessage(player, "You aren't allowed to break blocks in this region!");
                     e.setCancelled(true);
                 });
-    }
-
-    private Predicate<? super RegionDefinition> playerNotAllowed(final Player player) {
-        return (regionDefinition) -> regionDefinition.getOwner() == null ||
-                (!regionDefinition.getOwner().equals(player.getUniqueId()) && !regionDefinition.getOtherAllowedPlayers().containsKey(player.getUniqueId()));
     }
 }

@@ -9,9 +9,9 @@ import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
 import moe.krp.simpleregions.listeners.SignListener;
-import moe.krp.simpleregions.util.ConfigUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -20,7 +20,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
-import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -42,6 +41,7 @@ public class StorageManager {
     private final Gson gson = new GsonBuilder()
             .setPrettyPrinting()
             .disableHtmlEscaping()
+            .setVersion(1.3)
             .create();
 
     private final Set<RegionDefinition> allRegions;
@@ -83,7 +83,7 @@ public class StorageManager {
                 .findFirst();
     }
 
-    public boolean addRegion(String name, String worldName, UUID creator, String RegionType, Region region) {
+    public boolean addRegion(String name, String worldName, UUID creator, String regionType, Region region) {
         final Vec3D minPoint = new Vec3D(region.getMinimumPoint(), worldName);
         final Vec3D maxPoint = new Vec3D(region.getMaximumPoint(), worldName);
         final RegionDefinition regionDefinition = new RegionDefinition(
@@ -91,7 +91,7 @@ public class StorageManager {
                 minPoint,
                 maxPoint,
                 creator,
-                RegionType
+                regionType
         );
 
         synchronized (allRegions) {
@@ -146,17 +146,20 @@ public class StorageManager {
     public void resetOwnership(final String regionName) {
         getRegionByName(regionName)
                 .ifPresent( region -> {
-                    final Vec3D location = region.getRelatedSign().getLocation();
-                    final World world = Bukkit.getServer().getWorld(location.getWorld());
+                    region.setPreviousOwner(region.getOwner());
+                    final World world = Bukkit.getServer().getWorld(region.getWorld());
                     if (world != null) {
-                        SignListener.resetWorldSign(
-                                (Sign) world.getBlockAt(location.toLocation()).getState(),
-                                SimpleRegions.getStorageManager().getRegionDefinitionBySignLocation(location),
-                                region.getRelatedSign().getCost()
-                        );
+                        if (region.getRelatedSign() != null) {
+                            final Vec3D location = region.getRelatedSign().getLocation();
+                            SignListener.resetWorldSign(
+                                    (Sign) world.getBlockAt(location.toLocation()).getState(),
+                                    SimpleRegions.getStorageManager().getRegionDefinitionBySignLocation(location),
+                                    region.getRelatedSign().getCost()
+                            );
+                        }
                     }
                     else {
-                        SimpleRegions.log("World " + location.getWorld() + " does not exist while resetting ownership of " + region.getName());
+                        SimpleRegions.log("World " + region.getWorld() + " does not exist while resetting ownership of " + region.getName());
                     }
 
                     region.clearOwnerAndReset();
@@ -225,7 +228,7 @@ public class StorageManager {
             try {
                 final String contents = Files.readString(file.toPath());
                 final RegionDefinition region = gson.fromJson(contents, RegionDefinition.class);
-                region.setConfiguration(ConfigUtils.getRegionTypeConfiguration(region.getRegionType()));
+                region.setConfiguration(region.getRegionType());
                 allRegions.add(region);
                 addRegionToChunkVecMap(region);
                 if (region.getRelatedSign() != null) {
@@ -272,14 +275,35 @@ public class StorageManager {
                     if (blockState instanceof Sign signBlock) {
                         signBlock.line(0, Component.text(region.getName()).color(TextColor.color(0xFF5555)));
                         signBlock.line(1, Component.text(displayName).color(TextColor.color(0xFFAA00)));
-                        signBlock.line(2, Component.text("Owned until:"));
-                        signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
+                        updateSignDurations(region, signBlock);
                         signBlock.update();
                     }
 
                     region.setOwner(owner);
                     region.setDirty(true);
-                }, () -> SimpleRegions.log(Level.SEVERE, "Region " + regionName + " not found during signage update."));
+
+                    if (!region.getConfiguration().getRemoveItemsOnNewOwner() || (
+                            region.getPreviousOwner() != null && region.getPreviousOwner().equals(owner)
+                    )) {
+                        return;
+                    }
+
+                    final World world = Bukkit.getWorld(region.getWorld());
+                    if (world == null) {
+                        SimpleRegions.log(Level.SEVERE, "World " + region.getWorld() + "doesn't exist!");
+                        return;
+                    }
+                    for (long x = region.getLowerBound().getX(); x <= region.getUpperBound().getX(); x++) {
+                        for (long y = region.getLowerBound().getY(); y <= region.getUpperBound().getY(); y++) {
+                            for (long z = region.getLowerBound().getZ(); z <= region.getUpperBound().getZ(); z++) {
+                                final Block block = world.getBlockAt((int) x, (int) y, (int) z);
+                                if (!block.getType().isAir()) {
+                                    block.breakNaturally();
+                                }
+                            }
+                        }
+                    }
+                }, () -> SimpleRegions.log(Level.SEVERE, "Region " + regionName + " not found during owner update."));
     }
 
     public void tickSigns(final Duration duration) {
@@ -291,18 +315,51 @@ public class StorageManager {
             final BlockState blockState = getSignBlockStateForRegion(region);
             if (blockState instanceof Sign signBlock) {
                 final SignDefinition sign = region.getRelatedSign();
-                final Duration newDuration = sign.tickDownTime(duration);
+                final Duration newSignDuration = sign.tickDownTime(duration);
 
-                if (newDuration.isNegative() || newDuration.isZero()) {
+                if (newSignDuration.isNegative() || newSignDuration.isZero()) {
                     SimpleRegions.getStorageManager().resetOwnership(region.getName());
                     return;
                 }
 
-                signBlock.line(3, Component.text(sign.getDuration()));
+                if (region.getUpkeepInterval() != null) {
+                    final Duration newRegionUpkeepDuration = region.tickDownTime(duration);
+                    if (newRegionUpkeepDuration.isNegative() || newRegionUpkeepDuration.isZero()) {
+                        final OfflinePlayer owner = Bukkit.getOfflinePlayer(region.getOwner());
+                        final Economy economy = SimpleRegions.getEconomy();
+                        if (economy.has(owner, region.getUpkeepCost())) {
+                            economy.withdrawPlayer(owner, region.getUpkeepCost());
+                        }
+                        else {
+                            SimpleRegions.getStorageManager().resetOwnership(region.getName());
+                            return;
+                        }
+                    }
+                }
+
+                updateSignDurations(region, signBlock);
                 signBlock.update();
                 region.setDirty(true);
             }
         });
+    }
+
+    private void updateSignDurations(
+            final RegionDefinition region,
+            final Sign signBlock
+    ) {
+        if (region.getUpkeepInterval() != null && region.getRelatedSign().isNeverExpire()) {
+            signBlock.line(2, Component.text("Next upkeep:"));
+            signBlock.line(3, Component.text(region.getUpkeepTimer()));
+        }
+        else if (region.getUpkeepInterval() != null && !region.getRelatedSign().isNeverExpire()) {
+            signBlock.line(2, Component.text("Upkeep: " + region.getUpkeepTimer()));
+            signBlock.line(3, Component.text("Expiry: " + region.getRelatedSign().getDuration()));
+        }
+        else {
+            signBlock.line(2, Component.text("Owned until:"));
+            signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
+        }
     }
 
     private void removeRegionFromChunkVecMap(final RegionDefinition regionDefinition) {

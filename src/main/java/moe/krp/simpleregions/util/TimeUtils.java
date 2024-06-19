@@ -6,7 +6,7 @@ import java.util.Objects;
 public class TimeUtils {
     public static Duration getDurationFromTimeString(final String timeString) throws IllegalArgumentException {
         if (timeString == null) {
-            return Duration.ZERO;
+            return null;
         }
         // format is 1d2h3m4s
         final String[] timeParts = timeString.split("(?<=\\D)(?=\\d|-\\d)|(?<=\\d)(?=\\D)");
@@ -28,6 +28,7 @@ public class TimeUtils {
                 case "m" -> isNegative ? duration.minusMinutes(timeValue) : duration.plusMinutes(timeValue);
                 case "s" -> isNegative ? duration.minusSeconds(timeValue) : duration.plusSeconds(timeValue);
                 case "mo" -> isNegative ? duration.minusDays(30*timeValue) : duration.plusDays(30*timeValue);
+                case "w" -> isNegative ? duration.minusDays(7*timeValue) : duration.plusDays(7*timeValue);
                 default -> throw new IllegalArgumentException("Invalid time unit: " + token);
             };
 
@@ -43,6 +44,20 @@ public class TimeUtils {
         final long hours = duration.minusDays(days).toHours();
         final long minutes = duration.minusDays(days).minusHours(hours).toMinutes();
         final long seconds = duration.minusDays(days).minusHours(hours).minusMinutes(minutes).getSeconds();
-        return days + "d" + hours + "h" + minutes + "m" + seconds + "s";
+        String output = "";
+        if (days > 0) {
+            output += days + "d";
+        }
+        if (hours > 0) {
+            output += hours + "h";
+        }
+        if (minutes > 0) {
+            output += minutes + "m";
+        }
+        if (seconds > 0) {
+            output += seconds + "s";
+        }
+
+        return output;
     }
 }

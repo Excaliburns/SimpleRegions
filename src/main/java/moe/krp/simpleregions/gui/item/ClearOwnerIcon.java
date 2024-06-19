@@ -3,6 +3,7 @@ package moe.krp.simpleregions.gui.item;
 import mc.obliviate.inventory.Gui;
 import mc.obliviate.inventory.Icon;
 import moe.krp.simpleregions.SimpleRegions;
+import moe.krp.simpleregions.gui.ConfirmDeleteGui;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.util.ChatUtils;
 import org.bukkit.ChatColor;
@@ -23,15 +24,6 @@ public class ClearOwnerIcon extends Icon {
                 ChatColor.BOLD + ChatColor.RED +
                 "RELINQUISH OWNERSHIP"
         );
-        this.onClick(event -> {
-            SimpleRegions.getStorageManager().resetOwnership(
-                    regionDefinition.getName()
-            );
-            ChatUtils.sendMessage(
-                    event.getWhoClicked(),
-                    "Deleted ownership from region."
-            );
-            player.closeInventory();
-        });
+        this.onClick(event -> new ConfirmDeleteGui(player, ConfirmDeleteGui.getBuyRegionGuiId(player.getName()), regionDefinition).open());
     }
 }

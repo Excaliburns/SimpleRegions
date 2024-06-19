@@ -1,8 +1,11 @@
 package moe.krp.simpleregions.helpers;
 
+import com.google.gson.annotations.Since;
 import lombok.Data;
 import moe.krp.simpleregions.util.ConfigUtils;
+import moe.krp.simpleregions.util.TimeUtils;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,10 +25,21 @@ public class RegionDefinition {
     private UUID creator;
     private SignDefinition relatedSign;
     private HashMap<UUID, String> otherAllowedPlayers;
+    @Since(1.3)
+    private String upkeepTimer;
+    @Since(1.3)
+    private UUID previousOwner;
 
     private transient RegionTypeConfiguration configuration;
     private transient boolean markedForDeletion;
     private transient boolean dirty;
+    private transient String upkeepInterval;
+    private transient double upkeepCost;
+
+    public RegionDefinition(String name, Vec3D lowerBound, Vec3D upperBound, UUID creator, final String regionType, final String upkeepTimer) {
+        this(name, lowerBound, upperBound, creator, regionType);
+        this.upkeepTimer = upkeepTimer;
+    }
 
     public RegionDefinition(String name, Vec3D lowerBound, Vec3D upperBound, UUID creator, final String regionType) {
         this.name = name;
@@ -34,9 +48,16 @@ public class RegionDefinition {
         this.upperBound = upperBound;
         this.creator = creator;
         this.regionType = regionType;
-        this.configuration = ConfigUtils.getRegionTypeConfiguration(regionType);
+        setConfiguration(regionType);
         dirty = true;
         otherAllowedPlayers = new HashMap<>();
+    }
+
+    public void setConfiguration(final String regionType) {
+        this.configuration = ConfigUtils.getRegionTypeConfiguration(regionType);
+        if (configuration.getUpkeepInterval() != null) {
+            this.upkeepTimer = TimeUtils.getTimeStringFromDuration(configuration.getUpkeepInterval());
+        }
     }
 
     public void setRegionType(final String regionType) {
@@ -71,5 +92,20 @@ public class RegionDefinition {
         }
 
         return chunkVectors;
+    }
+
+    public Duration tickDownTime(final Duration minusDuration) {
+        final Duration thisDuration = TimeUtils.getDurationFromTimeString(upkeepTimer);
+        final Duration newDuration = thisDuration.minus(minusDuration);
+        this.upkeepTimer = TimeUtils.getTimeStringFromDuration(newDuration);
+        return newDuration;
+    }
+
+    public double getUpkeepCost() {
+        return configuration.getUpkeepCost();
+    }
+
+    public Duration getUpkeepInterval() {
+        return configuration.getUpkeepInterval();
     }
 }

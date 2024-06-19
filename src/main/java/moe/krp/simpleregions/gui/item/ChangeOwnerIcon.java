@@ -3,6 +3,7 @@ package moe.krp.simpleregions.gui.item;
 import mc.obliviate.inventory.Icon;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.helpers.RegionDefinition;
+import moe.krp.simpleregions.util.ChatUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.wesjd.anvilgui.AnvilGUI;
@@ -13,6 +14,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class ChangeOwnerIcon extends Icon {
     public ChangeOwnerIcon(
@@ -34,17 +36,20 @@ public class ChangeOwnerIcon extends Icon {
 
                         final String playerName = stateSnapshot.getText();
                         if (playerName == null || playerName.isEmpty()) {
-                            stateSnapshot.getPlayer().sendMessage(
-                                    Component.text().color(TextColor.color(0xD00000))
-                                             .content("Please enter a player name.").build()
-                            );
+                            ChatUtils.sendErrorMessage(stateSnapshot.getPlayer(), "Please enter a player name.");
                             return Collections.emptyList();
                         }
                         if (playerName.equalsIgnoreCase(clicker.getName())) {
-                            stateSnapshot.getPlayer().sendMessage(
-                                    Component.text().color(TextColor.color(0xD00000))
-                                             .content("You can't change to yourself!").build()
-                            );
+                            ChatUtils.sendErrorMessage(stateSnapshot.getPlayer(), "You can't change to yourself!");
+                            return Collections.emptyList();
+                        }
+                        final UUID playerId = Bukkit.getOfflinePlayer(playerName).getUniqueId();
+                        final int playerOwnedRegions = SimpleRegions.getStorageManager().getNumberOfOwnedRegionsForPlayer(
+                                regionDefinition.getRegionType(),
+                                playerId
+                        );
+                        if (regionDefinition.getConfiguration().getOwnerLimit() - 1 >= playerOwnedRegions) {
+                            ChatUtils.sendErrorMessage(stateSnapshot.getPlayer(), "That player can't accept any more cells!");
                             return Collections.emptyList();
                         }
 
@@ -52,7 +57,7 @@ public class ChangeOwnerIcon extends Icon {
                                 AnvilGUI.ResponseAction.run(
                                         () -> SimpleRegions.getStorageManager().setRegionOwned(
                                                 regionDefinition.getName(),
-                                                Bukkit.getOfflinePlayer(playerName).getUniqueId(),
+                                                playerId,
                                                 playerName
                                         )));
                     })

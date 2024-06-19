@@ -1,22 +1,14 @@
 display-name: 'SimpleRegions'
-region-types:
-  - PrisonCell
-  - BlackMarket
-  - Courtyard-Small
-  - Courtyard-Large
+default-owner-limit: 1
+default-buy-sign-line-zero-color: '#136F63'
+default-buy-sign-line-zero: '[RENT]'
 region-type-configuration:
-  PrisonCell:
-    buy-sign-line-zero-color: '#136F63'
-    buy-sign-line-zero: '[RENT]'
-    remove-items-on-expiry: false
-    owner-limit: 3
   BlackMarket:
-    remove-items-on-expiry: true
-  CourtYard-Small:
-    upkeep: true
-    upkeep-interval: 1d
-    upkeep-cost: 1000
-  CourtYard-Large:
-    upkeep: true
-    upkeep-interval: 1d
-    upkeep-cost: 25000
+    remove-items-on-new-owner: true
+  CitizenYard:
+    upkeep-interval: 2w
+    upkeep-cost: 500000
+  PrestigeCell:
+    owner-limit: 3
+  PrisonCell:
+    owner-limit: 5

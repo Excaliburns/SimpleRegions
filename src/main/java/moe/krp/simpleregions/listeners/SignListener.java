@@ -22,8 +22,10 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
 
 public class SignListener implements Listener {
     final private static StorageManager storageManager = SimpleRegions.getStorageManager();
@@ -81,25 +83,28 @@ public class SignListener implements Listener {
         );
     }
 
-    public static void resetWorldSign(final Sign e, final RegionDefinition regionDef, final double cost) {
-        e.line(0, Component.text(regionDef.getConfiguration()
-                                          .getBuySignLineZero())
-                           .color(TextColor.fromHexString(regionDef.getConfiguration()
-                                                                   .getBuySignLineZeroColor())));
-        e.line(1, Component.text(regionDef.getName()));
-        e.line(2, Component.empty());
+    public static void resetWorldSign(final Sign sign, final RegionDefinition regionDef, final double cost) {
+        try {
+            sign.line(0, Component.text(regionDef.getConfiguration().getBuySignLineZero())
+                                        .color(TextColor.fromHexString(regionDef.getConfiguration().getBuySignLineZeroColor())));
+        } catch (NullPointerException e) {
+            SimpleRegions.log(Level.SEVERE, "Did you set a buy-sign-line-zero for your Region type?");
+            SimpleRegions.log(e);
+        }
+        sign.line(1, Component.text(regionDef.getName()));
+        sign.line(2, Component.empty());
         if (cost == 0) {
-            e.line(3, Component.text("Free!")
+            sign.line(3, Component.text("Free!")
                                .color(TextColor.color(0x55FF55)));
         }
         else {
-            e.line(3, Component.text(ChatColor.GOLD + "$")
+            sign.line(3, Component.text(ChatColor.GOLD + "$")
                                .color(TextColor.color(0xFFAA00))
-                               .append(Component.text(cost)
+                               .append(Component.text(new DecimalFormat("#0.00").format(cost))
                                                 .color(TextColor.color(0xFFFF55))));
         }
 
-        Bukkit.getScheduler().runTaskLater(SimpleRegions.getInstance(), () -> e.update(), 20L);
+        Bukkit.getScheduler().runTaskLater(SimpleRegions.getInstance(), () -> sign.update(), 20L);
     }
 
     private boolean validateSign(final Component line0, final Player user) {
@@ -139,7 +144,7 @@ public class SignListener implements Listener {
             return null;
         }
         if (timeLimit.isEmpty() || timeLimit.isBlank()) {
-            ChatUtils.sendMessage(user, "Please specify a time limit, or \"Unlimited\", if it is unlimited.");
+            ChatUtils.sendMessage(user, "Please specify a time limit, or \"infinite\", if it is unlimited.");
             return null;
         }
 

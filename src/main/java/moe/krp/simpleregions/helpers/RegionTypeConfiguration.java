@@ -9,9 +9,9 @@ import java.time.Duration;
 public class RegionTypeConfiguration {
     final String buySignLineZeroColor;
     final String buySignLineZero;
-    final Boolean removeItemsOnExpiry;
-    final Boolean upkeep;
+    final Boolean removeItemsOnNewOwner;
     final Duration upkeepInterval;
     final Double upkeepCost;
     final Integer ownerLimit;
+    final Boolean allowInteractUnowned;
 }

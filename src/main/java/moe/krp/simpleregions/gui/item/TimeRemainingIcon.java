@@ -5,6 +5,9 @@ import moe.krp.simpleregions.helpers.RegionDefinition;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TimeRemainingIcon extends Icon {
     final RegionDefinition regionDefinition;
 
@@ -16,6 +19,11 @@ public class TimeRemainingIcon extends Icon {
                 ChatColor.BOLD + ChatColor.GOLD +
                 "TIME REMAINING"
         );
-        setLore(ChatColor.GRAY + "Time Remaining: " + ChatColor.YELLOW + regionDefinition.getRelatedSign().getDuration());
+        final List<String> lore = new ArrayList<>();
+        if (regionDefinition.getUpkeepTimer() != null) {
+            lore.add(ChatColor.GRAY + "Next Upkeep: " + ChatColor.YELLOW + regionDefinition.getUpkeepTimer());
+        }
+        lore.add(ChatColor.GRAY + "Rental time remaining: " + ChatColor.YELLOW + regionDefinition.getRelatedSign().getDuration());
+        setLore(lore);
     }
 }

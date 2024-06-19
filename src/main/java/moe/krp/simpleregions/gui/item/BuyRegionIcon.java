@@ -4,30 +4,52 @@ import mc.obliviate.inventory.Icon;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.util.ChatUtils;
 import moe.krp.simpleregions.helpers.RegionDefinition;
+import moe.krp.simpleregions.util.TimeUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BuyRegionIcon extends Icon {
     final RegionDefinition regionDefinition;
 
     public BuyRegionIcon(final RegionDefinition regionDefinition) {
         super(Material.EMERALD);
+        final boolean isInfiniteWithUpkeep = regionDefinition.getUpkeepInterval() != null && regionDefinition.getRelatedSign().isNeverExpire();
+
         setName(ChatColor.GRAY +
                 ">> " +
                 ChatColor.BOLD + ChatColor.GREEN +
                 "BUY REGION"
         );
-        setLore(ChatColor.GRAY + "Purchase this region for:",
-                (regionDefinition.getRelatedSign().getCost() != 0 ? (
-                        ChatColor.GOLD   + "$" +
-                                ChatColor.YELLOW + regionDefinition.getRelatedSign().getCost()
-                ) : (
-                        ChatColor.GREEN + "Free!"
-                ))
-        );
+        final List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.GRAY + "Purchase this region for:");
+        if (regionDefinition.getRelatedSign().getCost() != 0) {
+            lore.add(ChatColor.GOLD + "$" + ChatColor.YELLOW + regionDefinition.getRelatedSign().getCost());
+        }
+        else {
+            lore.add(ChatColor.GREEN + "Free!");
+        }
+
+        if (isInfiniteWithUpkeep) {
+            lore.add(ChatColor.RED + "There is an upkeep for this plot!");
+            lore.add(ChatColor.RED + "The upkeep cost is:");
+            lore.add(ChatColor.GOLD + "$" + regionDefinition.getUpkeepCost());
+            lore.add(ChatColor.RED + "Deducted at each interval:");
+            lore.add(ChatColor.GOLD + TimeUtils.getTimeStringFromDuration(regionDefinition.getUpkeepInterval()));
+            lore.add(ChatColor.RED + "If you do not have funds when they are deducted your region will become unowned!");
+        }
+
+        if (regionDefinition.getConfiguration().getRemoveItemsOnNewOwner()) {
+            lore.add(ChatColor.RED + "This region is set to break the blocks inside");
+            lore.add(ChatColor.RED + "if it is bought by a new owner.");
+        }
+
+        setLore(lore);
         this.regionDefinition = regionDefinition;
         this.onClick(event -> {
             event.setCancelled(true);
@@ -36,13 +58,13 @@ public class BuyRegionIcon extends Icon {
             if (onlinePlayer != null) {
                 onlinePlayer.closeInventory();
             }
-            final int playerOwnedCells = SimpleRegions.getStorageManager().getNumberOfOwnedRegionsForPlayer(
+            final int playerOwnedRegions = SimpleRegions.getStorageManager().getNumberOfOwnedRegionsForPlayer(
                     regionDefinition.getRegionType(),
                     player.getUniqueId()
             );
 
-            if (regionDefinition.getConfiguration().getOwnerLimit() <= playerOwnedCells) {
-                ChatUtils.sendErrorMessage(player.getPlayer(), "You own too many of this type of cell!");
+            if (regionDefinition.getConfiguration().getOwnerLimit() <= playerOwnedRegions) {
+                ChatUtils.sendErrorMessage(player.getPlayer(), "You own too many of this type of region!");
                 return;
             }
 

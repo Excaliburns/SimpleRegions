@@ -69,12 +69,12 @@ public final class SimpleRegions extends JavaPlugin {
     }
 
     private void setUpTasks() {
-        // Clean up dirty storage every 2 seconds
+        // Clean up dirty storage every 10 seconds
         Bukkit.getScheduler().runTaskTimerAsynchronously(
                 this,
                 () -> storageManager.cleanUpDirtyStorage(),
                 0,
-                40 // 20 * 2
+                200 // 20 * 10
         );
         Bukkit.getScheduler().runTaskTimer(
                 this,
@@ -92,6 +92,7 @@ public final class SimpleRegions extends JavaPlugin {
         }
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
+            log("Economy is not set up!");
             return false;
         }
         economy = rsp.getProvider();
