@@ -23,6 +23,10 @@ public class PlayerActionListener implements Listener {
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+            return;
+        }
+
         final Block block = event.getClickedBlock();
         if (block == null) {
             return;
@@ -39,10 +43,6 @@ public class PlayerActionListener implements Listener {
         }
         final SignDefinition signDef = def.getRelatedSign();
         if (signDef == null) {
-            return;
-        }
-
-        if (event.getPlayer().hasPermission("SimpleRegions.delete") && event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
             return;
         }
 

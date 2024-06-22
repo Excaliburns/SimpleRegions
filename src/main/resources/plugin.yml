@@ -36,3 +36,5 @@ permissions:
         children:
             SimpleRegions.sign.create:
                 description: Allows player to create a region sign
+            SimpleRegions.sign.delete:
+              description: Allows player to create a region sign

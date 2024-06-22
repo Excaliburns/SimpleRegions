@@ -9,6 +9,9 @@ import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
 import moe.krp.simpleregions.listeners.SignListener;
+import moe.krp.simpleregions.util.ChatUtils;
+import moe.krp.simpleregions.util.RegionUtils;
+import moe.krp.simpleregions.util.TimeUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.milkbowl.vault.economy.Economy;
@@ -20,6 +23,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
+import org.bukkit.command.CommandSender;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -28,8 +32,10 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -44,13 +50,13 @@ public class StorageManager {
             .setVersion(1.3)
             .create();
 
-    private final Set<RegionDefinition> allRegions;
+    private final ConcurrentHashMap<String, RegionDefinition> regionNameToRegionMap;
     private final ConcurrentHashMap<Vec3D, List<String>> chunkVecToRegionNameMap;
     private final ConcurrentHashMap<RegionDefinition, UUID> locationToPlayerOwnerMap;
     private final ConcurrentHashMap<Vec3D, RegionDefinition> signLocationMap;
 
     public StorageManager() {
-        allRegions = new HashSet<>();
+        regionNameToRegionMap = new ConcurrentHashMap<>();
         chunkVecToRegionNameMap = new ConcurrentHashMap<>();
         locationToPlayerOwnerMap = new ConcurrentHashMap<>();
         signLocationMap = new ConcurrentHashMap<>();
@@ -76,11 +82,12 @@ public class StorageManager {
     }
 
     public Optional<RegionDefinition> getRegionByName(String name) {
-        return allRegions
-                .stream()
-                .filter(region -> region.getName().equals(name))
-                .filter(region -> !region.isMarkedForDeletion())
-                .findFirst();
+        final RegionDefinition def = regionNameToRegionMap.get(name);
+        if (def == null || def.isMarkedForDeletion()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(def);
     }
 
     public boolean addRegion(String name, String worldName, UUID creator, String regionType, Region region) {
@@ -94,9 +101,7 @@ public class StorageManager {
                 regionType
         );
 
-        synchronized (allRegions) {
-            allRegions.add(regionDefinition);
-        }
+        regionNameToRegionMap.put(name, regionDefinition);
 
         addRegionToChunkVecMap(regionDefinition);
 
@@ -104,17 +109,16 @@ public class StorageManager {
     }
 
     public void markRegionForDelete(final String name) {
-        allRegions.stream()
-                .filter( region -> region.getName().equals(name))
-                .findFirst()
-                .ifPresent( region -> {
-                    region.setMarkedForDeletion(true);
-                    region.setDirty(true);
+        Optional.ofNullable(regionNameToRegionMap.get(name))
+                .ifPresent( def -> {
+                    def.setMarkedForDeletion(true);
+                    def.setDirty(true);
                 });
     }
 
     public int getNumberOfOwnedRegionsForPlayer(final String regionType, final UUID player) {
-        return allRegions
+        return regionNameToRegionMap
+                .values()
                 .stream()
                 .filter( regionDefinition -> regionDefinition.getRegionType().equals(regionType))
                 .filter( regionDefinition -> regionDefinition.getOwner() != null && regionDefinition.getOwner().equals(player))
@@ -123,10 +127,11 @@ public class StorageManager {
     }
 
     public Set<String> getRegionNames() {
-        return allRegions
+        return regionNameToRegionMap
+                .entrySet()
                 .stream()
-                .filter(region -> !region.isMarkedForDeletion())
-                .map(RegionDefinition::getName)
+                .filter((entry) -> !entry.getValue().isMarkedForDeletion())
+                .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
 
@@ -141,6 +146,14 @@ public class StorageManager {
     public void setType(final String regionName, final String regionType) {
         getRegionByName(regionName)
                 .ifPresent( region -> region.setRegionType(regionType));
+    }
+
+    public void resetUpkeep(final String regionName) {
+        getRegionByName(regionName)
+                .ifPresent(region -> {
+                    region.setUpkeepTimer(TimeUtils.getTimeStringFromDuration(region.getUpkeepInterval()));
+                    region.setDirty(true);
+                });
     }
 
     public void resetOwnership(final String regionName) {
@@ -183,22 +196,7 @@ public class StorageManager {
                 });
     }
 
-    public void removeSign(String regionName) {
-        getRegionByName(regionName)
-                .ifPresentOrElse(region -> {
-                    final SignDefinition signDefinition = region.getRelatedSign();
-                    region.setRelatedSign(null);
-                    region.setDirty(true);
-                    signLocationMap.remove(signDefinition.getLocation());
-                }, () ->
-                        SimpleRegions.log(
-                                Level.SEVERE,
-                                String.format("Could not remove sign for region %s, was not found in map", regionName)
-                        )
-                );
-    }
-
-    public void addSign(String regionName, SignDefinition signDefinition) {
+    public void addSign(final String regionName, final SignDefinition signDefinition) {
         getRegionByName(regionName).ifPresentOrElse(
                 region -> {
                     region.setRelatedSign(signDefinition);
@@ -210,6 +208,58 @@ public class StorageManager {
                         String.format("Could not add sign for region %s, was not found in map", regionName)
                 )
         );
+    }
+
+    public void removeSign(final String regionName) {
+        getRegionByName(regionName)
+                .ifPresentOrElse(region -> {
+                            final SignDefinition signDefinition = region.getRelatedSign();
+                            region.setRelatedSign(null);
+                            region.setDirty(true);
+                            signLocationMap.remove(signDefinition.getLocation());
+                        }, () ->
+                                SimpleRegions.log(
+                                        Level.SEVERE,
+                                        String.format("Could not remove sign for region %s, was not found in map", regionName)
+                                )
+                );
+    }
+
+    public void setTimeRemaining(
+            final String regionName,
+            final String timeRemaining,
+            final boolean upkeep,
+            final CommandSender sender
+    ) {
+        getRegionByName(regionName)
+                .ifPresentOrElse( region -> {
+                    final Duration parsed = TimeUtils.getDurationFromTimeString(timeRemaining);
+                    if (upkeep) {
+                        region.setUpkeepTimer(TimeUtils.getTimeStringFromDuration(parsed));
+                    }
+                    else {
+                        final SignDefinition def = region.getRelatedSign();
+                        if (def == null) {
+                            final String err = "That region does not have a related sign!";
+                            if (sender == null) {
+                                SimpleRegions.log(Level.SEVERE, err);
+                                return;
+                            }
+                            ChatUtils.sendErrorMessage(sender, err);
+                            return;
+                        }
+
+                        def.setDuration(TimeUtils.getTimeStringFromDuration(parsed));
+                    }
+                    region.setDirty(true);
+                }, () -> {
+                    final String err = "That region does not exist!";
+                    if (sender == null) {
+                        SimpleRegions.log(Level.SEVERE, err);
+                        return;
+                    }
+                    ChatUtils.sendErrorMessage(sender, err);
+                });
     }
 
     public void initInMemoryStore() {
@@ -229,7 +279,7 @@ public class StorageManager {
                 final String contents = Files.readString(file.toPath());
                 final RegionDefinition region = gson.fromJson(contents, RegionDefinition.class);
                 region.setConfiguration(region.getRegionType());
-                allRegions.add(region);
+                regionNameToRegionMap.put(region.getName(), region);
                 addRegionToChunkVecMap(region);
                 if (region.getRelatedSign() != null) {
                     signLocationMap.put(region.getRelatedSign().getLocation(), region);
@@ -244,17 +294,15 @@ public class StorageManager {
     public void cleanUpDirtyStorage() {
         final Set<RegionDefinition> regionsToSave = new HashSet<>();
 
-        for (RegionDefinition region : allRegions) {
-            synchronized (allRegions) {
-                if (region.isDirty()) {
-                    regionsToSave.add(region);
-                    region.setDirty(false);
-                }
-                if (region.isMarkedForDeletion()) {
-                    locationToPlayerOwnerMap.remove(region);
-                    allRegions.remove(region);
-                    removeRegionFromChunkVecMap(region);
-                }
+        for (RegionDefinition region : regionNameToRegionMap.values()) {
+            if (region.isDirty()) {
+                regionsToSave.add(region);
+                region.setDirty(false);
+            }
+            if (region.isMarkedForDeletion()) {
+                locationToPlayerOwnerMap.remove(region);
+                regionNameToRegionMap.remove(region.getName());
+                removeRegionFromChunkVecMap(region);
             }
         }
         saveRegions(regionsToSave);
@@ -276,15 +324,15 @@ public class StorageManager {
                         signBlock.line(0, Component.text(region.getName()).color(TextColor.color(0xFF5555)));
                         signBlock.line(1, Component.text(displayName).color(TextColor.color(0xFFAA00)));
                         updateSignDurations(region, signBlock);
-                        signBlock.update();
                     }
 
                     region.setOwner(owner);
                     region.setDirty(true);
 
-                    if (!region.getConfiguration().getRemoveItemsOnNewOwner() || (
-                            region.getPreviousOwner() != null && region.getPreviousOwner().equals(owner)
-                    )) {
+                    if (!region.getConfiguration().getRemoveItemsOnNewOwner()
+                            || (region.getPreviousOwner() != null && region.getPreviousOwner().equals(owner))
+                            || region.getPreviousOwner() == null
+                    ) {
                         return;
                     }
 
@@ -293,21 +341,12 @@ public class StorageManager {
                         SimpleRegions.log(Level.SEVERE, "World " + region.getWorld() + "doesn't exist!");
                         return;
                     }
-                    for (long x = region.getLowerBound().getX(); x <= region.getUpperBound().getX(); x++) {
-                        for (long y = region.getLowerBound().getY(); y <= region.getUpperBound().getY(); y++) {
-                            for (long z = region.getLowerBound().getZ(); z <= region.getUpperBound().getZ(); z++) {
-                                final Block block = world.getBlockAt((int) x, (int) y, (int) z);
-                                if (!block.getType().isAir()) {
-                                    block.breakNaturally();
-                                }
-                            }
-                        }
-                    }
+                    RegionUtils.removeBlocksOnExpiry(world, region);
                 }, () -> SimpleRegions.log(Level.SEVERE, "Region " + regionName + " not found during owner update."));
     }
 
     public void tickSigns(final Duration duration) {
-        allRegions.forEach( region -> {
+        regionNameToRegionMap.values().forEach( region -> {
             if (region.getOwner() == null) {
                 return;
             }
@@ -329,6 +368,7 @@ public class StorageManager {
                         final Economy economy = SimpleRegions.getEconomy();
                         if (economy.has(owner, region.getUpkeepCost())) {
                             economy.withdrawPlayer(owner, region.getUpkeepCost());
+                            SimpleRegions.getStorageManager().resetUpkeep(region.getName());
                         }
                         else {
                             SimpleRegions.getStorageManager().resetOwnership(region.getName());
@@ -337,8 +377,9 @@ public class StorageManager {
                     }
                 }
 
-                updateSignDurations(region, signBlock);
-                signBlock.update();
+                if (newSignDuration.getSeconds() == 0) {
+                    updateSignDurations(region, signBlock);
+                }
                 region.setDirty(true);
             }
         });
@@ -360,6 +401,7 @@ public class StorageManager {
             signBlock.line(2, Component.text("Owned until:"));
             signBlock.line(3, Component.text(region.getRelatedSign().getDuration()));
         }
+        signBlock.update();
     }
 
     private void removeRegionFromChunkVecMap(final RegionDefinition regionDefinition) {
@@ -416,14 +458,14 @@ public class StorageManager {
 
                 if (!parentCreationSuccess) {
                     SimpleRegions.log(Level.INFO, "Failed to create parent directory for Region " + region.getName());
-                    allRegions.remove(region);
+                    regionNameToRegionMap.remove(region);
                     continue;
                 }
 
                 final boolean createFileSuccess = file.exists() || file.createNewFile();
                 if (!createFileSuccess) {
                     SimpleRegions.log(Level.INFO, "Failed to create file for Region " + region.getName());
-                    allRegions.remove(region);
+                    regionNameToRegionMap.remove(region);
                     continue;
                 }
 

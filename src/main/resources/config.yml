@@ -5,6 +5,8 @@ default-buy-sign-line-zero: '[RENT]'
 region-type-configuration:
   BlackMarket:
     remove-items-on-new-owner: true
+    remove-item-block-whitelist:
+      - all_signs
   CitizenYard:
     upkeep-interval: 2w
     upkeep-cost: 500000

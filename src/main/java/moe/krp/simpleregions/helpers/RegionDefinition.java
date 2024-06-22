@@ -4,13 +4,15 @@ import com.google.gson.annotations.Since;
 import lombok.Data;
 import moe.krp.simpleregions.util.ConfigUtils;
 import moe.krp.simpleregions.util.TimeUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -107,5 +109,103 @@ public class RegionDefinition {
 
     public Duration getUpkeepInterval() {
         return configuration.getUpkeepInterval();
+    }
+
+    public List<Component> getFormattedChatInformation() {
+        final ArrayList<Component> components = new ArrayList<>();
+        components.add(
+                Component.text("----------------")
+                         .color(TextColor.color(0xFFBA08))
+                         .decorate(TextDecoration.BOLD, TextDecoration.UNDERLINED)
+                         .append(Component.text("Region Info"))
+                         .append(Component.text("----------------"))
+                        .append(Component.newline())
+        );
+
+        components.add(
+                Component.text("Name: ").color(TextColor.color(0x3F88C5))
+                        .append(Component.text(name).color(TextColor.color(0xFDFBA08)))
+                        .append(Component.text(" (type=" + regionType +")").color(TextColor.color(0x778EA0)))
+        );
+        components.add(
+                Component.text("World: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text(world).color(TextColor.color(0xFDFBA08)))
+        );
+        components.add(
+                Component.text("Lower Bound: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text("[X=" + lowerBound.getX() + ", Y=" + lowerBound.getY() + ", Z=" + lowerBound.getZ() + ", world=" + lowerBound.getWorld() + "]").color(TextColor.color(0xFDFBA08)))
+
+        );
+        components.add(
+                Component.text("Upper Bound: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text("[X=" + upperBound.getX() + ", Y=" + upperBound.getY() + ", Z=" + upperBound.getZ() + ", world=" + upperBound.getWorld() + "]").color(TextColor.color(0xFDFBA08)))
+
+        );
+        components.add(
+                Component.text("Owner: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text(owner != null ? owner.toString() : "None").color(TextColor.color(0xFDFBA08)))
+        );
+        components.add(
+                Component.text("Creator: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text(creator.toString()).color(TextColor.color(0xFDFBA08)))
+        );
+        if (relatedSign == null) {
+            components.add(
+                    Component.text("Related Sign: ").color(TextColor.color(0x3F88C5))
+                             .append(Component.text("None").color(TextColor.color(0xFDFBA08)))
+            );
+        }
+        else {
+            components.add(
+                    Component.empty().append(Component.text("Related Sign:").color(TextColor.color(0x3F88C5)))
+                             .color(TextColor.color(0xFDFBA08))
+                             .append(Component.newline())
+                             .append(Component.text("    Cost=" + relatedSign.getCost()))
+                             .append(Component.newline())
+                             .append(Component.text("    Location=[X=" + relatedSign.getLocation().getX() + ", Y=" + relatedSign.getLocation().getY() + ", Z=" + relatedSign.getLocation().getZ() + ", world=" + relatedSign.getLocation().getWorld() + "]"))
+                             .append(Component.newline())
+                             .append(Component.text("    Original Duration=" + relatedSign.getOriginalDuration()))
+                             .append(Component.newline())
+                             .append(Component.text("    Duration=" + relatedSign.getDuration()))
+                             .append(Component.newline())
+                             .append(Component.text("    Never Expire=" + relatedSign.isNeverExpire()))
+            );
+        }
+        final List<Component> otherAllowedPlayersComponents = new ArrayList<>();
+        otherAllowedPlayersComponents.add(
+                Component.text("Other Allowed Players: ").color(TextColor.color(0x3F88C5))
+        );
+        if (otherAllowedPlayers.isEmpty()) {
+            otherAllowedPlayersComponents.set(0, otherAllowedPlayersComponents.get(0).append(
+                    Component.text("None!").color(TextColor.color(0xFDFBA08))
+            ));
+        }
+        else {
+            otherAllowedPlayers.forEach( (key, value) ->
+                    otherAllowedPlayersComponents.add(
+                            Component.text("[UUID=" + key.toString() + ", Name=" + value + "]").color(TextColor.color(0xFDFBA08))
+                    )
+            );
+        }
+        components.addAll(otherAllowedPlayersComponents);
+
+        components.add(
+                Component.text("Original Upkeep: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text(upkeepInterval != null ? upkeepInterval : "None!").color(TextColor.color(0xFDFBA08)))
+        );
+        components.add(
+                Component.text("Upkeep Timer: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text(upkeepInterval != null ? upkeepInterval : "None!").color(TextColor.color(0xFDFBA08)))
+        );
+        components.add(
+                Component.text("Upkeep Cost: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text(upkeepCost).color(TextColor.color(0xFDFBA08)))
+        );
+        components.add(
+                Component.text("Previous Owner: ").color(TextColor.color(0x3F88C5))
+                         .append(Component.text(previousOwner != null ? previousOwner.toString() : "None!").color(TextColor.color(0xFDFBA08)))
+        );
+
+        return components;
     }
 }

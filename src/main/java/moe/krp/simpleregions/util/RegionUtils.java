@@ -1,12 +1,48 @@
 package moe.krp.simpleregions.util;
 
+import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RegionUtils {
+    public static void removeBlocksOnExpiry(
+            final World world,
+            final RegionDefinition region
+    ) {
+        final Set<String> whitelist = new HashSet<>(region.getConfiguration().getRemoveItemBlockFilter());
+
+        for (long x = region.getLowerBound().getX(); x <= region.getUpperBound().getX(); x++) {
+            for (long y = region.getLowerBound().getY(); y <= region.getUpperBound().getY(); y++) {
+                for (long z = region.getLowerBound().getZ(); z <= region.getUpperBound().getZ(); z++) {
+                    final Block block = world.getBlockAt((int) x, (int) y, (int) z);
+                    if (block.getType().isAir()) {
+                        continue;
+                    }
+                    if (whitelist.isEmpty()) {
+                        block.breakNaturally();
+                        continue;
+                    }
+                    final boolean isSign = block.getState() instanceof Sign;
+                    if (whitelist.contains("all-signs") && isSign) {
+                        block.breakNaturally();
+                    }
+                    else if (whitelist.contains(block.getType().toString())) {
+                        block.breakNaturally();
+                    }
+                }
+            }
+        }
+    }
+
     public static Location[] getCuboidPointsFromBounds(Vec3D c1, Vec3D c2, World world) {
         ArrayList<Location> locationArrayList = new ArrayList<>();
 

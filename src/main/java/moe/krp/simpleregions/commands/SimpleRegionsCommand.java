@@ -10,6 +10,8 @@ import moe.krp.simpleregions.util.ChatUtils;
 import moe.krp.simpleregions.util.ConfigUtils;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.visualization.VisualizationManager;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -64,6 +66,8 @@ public class SimpleRegionsCommand implements TabExecutor {
             case "setOwner" -> handleRegionSetOwner(sender, args[1], args[2]);
             case "clearOwner" -> handleRegionClearOwner(sender, args[1]);
             case "setType" -> handleRegionSetType(sender, args[1], args[2]);
+            case "setUpkeepTimeRemaining" -> handleSetUpkeepTimeRemaining(sender, args[1], args[2]);
+            case "setTimeRemaining" -> handleSetTimeRemaining(sender, args[1], args[2]);
         }
 
         return true;
@@ -72,7 +76,7 @@ public class SimpleRegionsCommand implements TabExecutor {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1) {
-            return List.of("create", "delete", "info", "visualize", "setOwner", "clearOwner", "setType");
+            return List.of("create", "delete", "info", "visualize", "setOwner", "clearOwner", "setType", "setTimeRemaining", "setUpkeepTimeRemaining");
         }
 
         if (args.length == 2 && args[0].equals("create")) {
@@ -124,13 +128,23 @@ public class SimpleRegionsCommand implements TabExecutor {
                     .filter(name -> name.startsWith(args[2]))
                     .collect(Collectors.toList());
         }
+        else if (args.length == 2 && args[0].equals("setUpkeepTimeRemaining")) {
+            return SimpleRegions.getStorageManager().getRegionNames()
+                                .stream().filter(regionName -> regionName.startsWith(args[1]))
+                                .collect(Collectors.toList());
+        }
+        else if (args.length == 2 && args[0].equals("setTimeRemaining")) {
+            return SimpleRegions.getStorageManager().getRegionNames()
+                                .stream().filter(regionName -> regionName.startsWith(args[1]))
+                                .collect(Collectors.toList());
+        }
 
         return Collections.emptyList();
     }
 
     private void handleRegionInfo(final CommandSender sender, final String regionName) {
         SimpleRegions.getStorageManager().getRegionByName(regionName)
-                     .ifPresentOrElse(def -> ChatUtils.sendMessage(sender, String.format("Region: %s", def)),
+                     .ifPresentOrElse(def -> def.getFormattedChatInformation().forEach(sender::sendMessage),
                              () -> ChatUtils.sendErrorMessage(sender, "Region not found"));
     }
 
@@ -219,6 +233,24 @@ public class SimpleRegionsCommand implements TabExecutor {
         ChatUtils.sendMessage(sender, "Cleared owner of " + regionName);
     }
 
+    private void handleSetUpkeepTimeRemaining(final CommandSender sender, final String regionName, final String timeRemaining) {
+        if (!sender.hasPermission("SimpleRegions.setUpkeepTimeRemaining")) {
+            ChatUtils.sendErrorMessage(sender, "You don't have permission to set the upkeep time on a region");
+            return;
+        }
+
+        SimpleRegions.getStorageManager().setTimeRemaining(regionName, timeRemaining, true, sender);
+    }
+
+    private void handleSetTimeRemaining(final CommandSender sender, final String regionName, final String timeRemaining) {
+        if (!sender.hasPermission("SimpleRegions.setTimeRemaining")) {
+            ChatUtils.sendErrorMessage(sender, "You don't have permission to set the time on a region");
+            return;
+        }
+
+        SimpleRegions.getStorageManager().setTimeRemaining(regionName, timeRemaining, false, sender);
+    }
+
     private void handleRegionSetOwner(final CommandSender sender, final String regionName, final String playerName) {
         if (!sender.hasPermission("SimpleRegions.setOwner")) {
             ChatUtils.sendErrorMessage(sender, "You don't have permission to set region owners");
@@ -226,11 +258,7 @@ public class SimpleRegionsCommand implements TabExecutor {
         }
         SimpleRegions.getStorageManager().getRegionByName(regionName).ifPresentOrElse(
                 def -> {
-                    final Player player = SimpleRegions.getInstance().getServer().getPlayer(playerName);
-                    if (player == null) {
-                        ChatUtils.sendErrorMessage(sender, "Player not found.");
-                        return;
-                    }
+                    final OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
                     SimpleRegions.getStorageManager().setRegionOwned(regionName, player.getUniqueId(), player.getName());
                     ChatUtils.sendMessage(sender, String.format("Region %s is now owned by %s", regionName, playerName));
                 }, () -> ChatUtils.sendErrorMessage(sender, "Region not found.")

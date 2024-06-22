@@ -96,6 +96,7 @@ public class ConfigUtils {
                 .builder()
                 .buySignLineZeroColor(buySignLineZeroColor)
                 .buySignLineZero(buySignLineZero)
+                .removeItemBlockFilter(configuration.getStringList(path + ".remove-item-block-whitelist"))
                 .removeItemsOnNewOwner(configuration.getBoolean(path + ".remove-items-on-new-owner"))
                 .upkeepInterval(TimeUtils.getDurationFromTimeString(configuration.getString(path + ".upkeep-interval")))
                 .upkeepCost(configuration.getDouble(path + ".upkeep-cost"))

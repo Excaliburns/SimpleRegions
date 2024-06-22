@@ -1,12 +1,20 @@
 package moe.krp.simpleregions.helpers;
 
+import com.sk89q.worldedit.util.formatting.text.format.Style;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import moe.krp.simpleregions.util.TimeUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.w3c.dom.Text;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data @NoArgsConstructor
 public class SignDefinition {

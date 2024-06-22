@@ -39,6 +39,11 @@ public class SignListener implements Listener {
         if (definition == null) {
             return;
         }
+        if (!e.getPlayer().hasPermission("SimpleRegions.sign.delete")) {
+            ChatUtils.sendErrorMessage(e.getPlayer(), "You don't have permission to delete this sign.");
+            e.setCancelled(true);
+            return;
+        }
 
         ChatUtils.sendMessage(e.getPlayer(), "Region ownership reset for region " + definition.getName());
         storageManager.resetOwnership(definition.getName());
