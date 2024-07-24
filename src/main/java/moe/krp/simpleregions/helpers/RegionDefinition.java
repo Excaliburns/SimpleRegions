@@ -35,7 +35,6 @@ public class RegionDefinition {
     private transient RegionTypeConfiguration configuration;
     private transient boolean markedForDeletion;
     private transient boolean dirty;
-    private transient String upkeepInterval;
     private transient double upkeepCost;
 
     public RegionDefinition(String name, Vec3D lowerBound, Vec3D upperBound, UUID creator, final String regionType, final String upkeepTimer) {
@@ -58,7 +57,9 @@ public class RegionDefinition {
     public void setConfiguration(final String regionType) {
         this.configuration = ConfigUtils.getRegionTypeConfiguration(regionType);
         if (configuration.getUpkeepInterval() != null) {
-            this.upkeepTimer = TimeUtils.getTimeStringFromDuration(configuration.getUpkeepInterval());
+            if (this.upkeepTimer == null) {
+                this.upkeepTimer = TimeUtils.getTimeStringFromDuration(configuration.getUpkeepInterval());
+            }
         }
     }
 
@@ -108,7 +109,7 @@ public class RegionDefinition {
     }
 
     public Duration getUpkeepInterval() {
-        return configuration.getUpkeepInterval();
+        return configuration.getUpkeepInterval().isZero() || configuration.getUpkeepInterval().isNegative() ? null : configuration.getUpkeepInterval();
     }
 
     public List<Component> getFormattedChatInformation() {
@@ -191,11 +192,11 @@ public class RegionDefinition {
 
         components.add(
                 Component.text("Original Upkeep: ").color(TextColor.color(0x3F88C5))
-                         .append(Component.text(upkeepInterval != null ? upkeepInterval : "None!").color(TextColor.color(0xFDFBA08)))
+                         .append(Component.text(getUpkeepInterval() != null ? TimeUtils.getTimeStringFromDuration(getUpkeepInterval()) : "None!").color(TextColor.color(0xFDFBA08)))
         );
         components.add(
                 Component.text("Upkeep Timer: ").color(TextColor.color(0x3F88C5))
-                         .append(Component.text(upkeepInterval != null ? upkeepInterval : "None!").color(TextColor.color(0xFDFBA08)))
+                         .append(Component.text(upkeepTimer != null ? upkeepTimer : "None!").color(TextColor.color(0xFDFBA08)))
         );
         components.add(
                 Component.text("Upkeep Cost: ").color(TextColor.color(0x3F88C5))

@@ -108,6 +108,27 @@ public class StorageManager {
         return true;
     }
 
+    public void changeRegionBounds(
+            final String name,
+            final Vec3D minPoint,
+            final Vec3D maxPoint,
+            final CommandSender sender
+    ) {
+        getRegionByName(name)
+                .ifPresentOrElse( region -> {
+                    removeRegionFromChunkVecMap(region);
+                    region.setLowerBound(minPoint);
+                    region.setUpperBound(maxPoint);
+                    addRegionToChunkVecMap(region);
+                    region.setDirty(true);
+                }, () -> {
+                    if (sender == null) {
+                        return;
+                    }
+                    ChatUtils.sendErrorMessage(sender, "That region does not exist.");
+                });
+    }
+
     public void markRegionForDelete(final String name) {
         Optional.ofNullable(regionNameToRegionMap.get(name))
                 .ifPresent( def -> {
@@ -361,6 +382,10 @@ public class StorageManager {
                     return;
                 }
 
+                if (newSignDuration.toSecondsPart() == 0) {
+                    updateSignDurations(region, signBlock);
+                }
+
                 if (region.getUpkeepInterval() != null) {
                     final Duration newRegionUpkeepDuration = region.tickDownTime(duration);
                     if (newRegionUpkeepDuration.isNegative() || newRegionUpkeepDuration.isZero()) {
@@ -372,14 +397,10 @@ public class StorageManager {
                         }
                         else {
                             SimpleRegions.getStorageManager().resetOwnership(region.getName());
-                            return;
                         }
                     }
                 }
 
-                if (newSignDuration.getSeconds() == 0) {
-                    updateSignDurations(region, signBlock);
-                }
                 region.setDirty(true);
             }
         });

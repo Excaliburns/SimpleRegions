@@ -20,7 +20,7 @@ public class TimeRemainingIcon extends Icon {
                 "TIME REMAINING"
         );
         final List<String> lore = new ArrayList<>();
-        if (regionDefinition.getUpkeepTimer() != null) {
+        if (regionDefinition.getUpkeepTimer() != null && regionDefinition.getUpkeepInterval() != null) {
             lore.add(ChatColor.GRAY + "Next Upkeep: " + ChatColor.YELLOW + regionDefinition.getUpkeepTimer());
         }
         lore.add(ChatColor.GRAY + "Rental time remaining: " + ChatColor.YELLOW + regionDefinition.getRelatedSign().getDuration());
