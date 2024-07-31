@@ -25,6 +25,10 @@ public class ConfigUtils {
         return (regionDefinition) -> {
             boolean result;
 
+            if (player.hasPermission("SimpleRegions.denyInteract")) {
+                return false;
+            }
+
             String node = "SimpleRegions." + regionDefinition.getRegionType();
             switch (type) {
                 case BUY -> node += ".buy";

@@ -17,6 +17,8 @@ permissions:
     default: op
     description: SimpleRegions base permission
     children:
+      SimpleRegions.denyInteract:
+        description: Deny all interaction within SimpleRegions regions
       SimpleRegions.bypass:
         description: Allows player to bypass region protection
       SimpleRegions.create:
