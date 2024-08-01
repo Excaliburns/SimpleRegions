@@ -246,6 +246,28 @@ public class StorageManager {
                 );
     }
 
+    public void setOriginalDuration(
+            final String regionName,
+            final String originalDuration,
+            final CommandSender sender
+    ) {
+        getRegionByName(regionName)
+                .ifPresentOrElse( region -> {
+                    final Duration parsed = TimeUtils.getDurationFromTimeString(originalDuration);
+                    final SignDefinition relatedSign = region.getRelatedSign();
+                    relatedSign.initDuration(TimeUtils.getTimeStringFromDuration(parsed), relatedSign.getDuration());
+                    region.setRelatedSign(relatedSign);
+                    region.setDirty(true);
+                }, () -> {
+                    final String err = "That region does not exist!";
+                    if (sender == null) {
+                        SimpleRegions.log(Level.SEVERE, err);
+                        return;
+                    }
+                    ChatUtils.sendErrorMessage(sender, err);
+                });
+    }
+
     public void setTimeRemaining(
             final String regionName,
             final String timeRemaining,

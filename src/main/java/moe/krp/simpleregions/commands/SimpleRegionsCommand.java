@@ -35,6 +35,7 @@ public class SimpleRegionsCommand implements TabExecutor {
             "setOwner",
             "clearOwner",
             "setType",
+            "setOriginalDuration",
             "setTimeRemaining",
             "setUpkeepTimeRemaining",
             "redefine"
@@ -54,6 +55,7 @@ public class SimpleRegionsCommand implements TabExecutor {
             case "setOwner" -> handleRegionSetOwner(sender, args[1], args[2]);
             case "clearOwner" -> handleRegionClearOwner(sender, args[1]);
             case "setType" -> handleRegionSetType(sender, args[1], args[2]);
+            case "setOriginalDuration" -> handleOriginalDuration(sender, args[1], args[2]);
             case "setUpkeepTimeRemaining" -> handleSetUpkeepTimeRemaining(sender, args[1], args[2]);
             case "setTimeRemaining" -> handleSetTimeRemaining(sender, args[1], args[2]);
             case "redefine" -> handleRedefine(sender, args[1]);
@@ -65,7 +67,7 @@ public class SimpleRegionsCommand implements TabExecutor {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1) {
-            return COMMAND_STRING_LIST;
+            return COMMAND_STRING_LIST.stream().filter( it -> it.startsWith(args[0])).collect(Collectors.toList());
         }
 
         if (args.length == 2 && args[0].equals("create")) {
@@ -116,6 +118,11 @@ public class SimpleRegionsCommand implements TabExecutor {
                     .stream().map(Player::getName)
                     .filter(name -> name.startsWith(args[2]))
                     .collect(Collectors.toList());
+        }
+        else if (args.length == 2 && args[0].equals("setOriginalDuration")) {
+            return SimpleRegions.getStorageManager().getRegionNames()
+                                .stream().filter(regionName -> regionName.startsWith(args[1]))
+                                .collect(Collectors.toList());
         }
         else if (args.length == 2 && args[0].equals("setUpkeepTimeRemaining")) {
             return SimpleRegions.getStorageManager().getRegionNames()
@@ -236,6 +243,15 @@ public class SimpleRegionsCommand implements TabExecutor {
 
         SimpleRegions.getStorageManager().resetOwnership(regionName);
         ChatUtils.sendMessage(sender, "Cleared owner of " + regionName);
+    }
+
+    private void handleOriginalDuration(final CommandSender sender, final String regionName, final String originalDuration) {
+        if (!sender.hasPermission("SimpleRegions.setOriginalDuration")) {
+            ChatUtils.sendErrorMessage(sender, "You don't have permission to set the upkeep time on a region");
+            return;
+        }
+
+        SimpleRegions.getStorageManager().setOriginalDuration(regionName, originalDuration, sender);
     }
 
     private void handleSetUpkeepTimeRemaining(final CommandSender sender, final String regionName, final String timeRemaining) {

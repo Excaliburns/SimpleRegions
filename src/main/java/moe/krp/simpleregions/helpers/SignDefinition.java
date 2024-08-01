@@ -32,6 +32,11 @@ public class SignDefinition {
         neverExpire = true;
     }
 
+    public void initDuration(final String originalDuration, final String durationRemaining) {
+        this.originalDuration = originalDuration;
+        this.duration = durationRemaining;
+    }
+
     public void initDuration(final String duration) {
         this.originalDuration = duration;
         this.duration = duration;

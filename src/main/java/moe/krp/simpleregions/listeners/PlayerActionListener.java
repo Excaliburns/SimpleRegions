@@ -46,7 +46,7 @@ public class PlayerActionListener implements Listener {
             return;
         }
 
-        if (!ConfigUtils.playerAllowed(event.getPlayer(), InteractionType.BUY).test(def)) {
+        if (!ConfigUtils.playerAllowed(event.getPlayer(), InteractionType.BUY).test(def) && def.getOwner() == null) {
             event.setCancelled(true);
             ChatUtils.sendErrorMessage(event.getPlayer(), "You don't have permission to buy this type of region!");
             return;
