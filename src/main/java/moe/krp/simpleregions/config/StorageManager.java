@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sk89q.worldedit.regions.Region;
 import moe.krp.simpleregions.SimpleRegions;
+import moe.krp.simpleregions.events.DeductUpkeepEvent;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
@@ -414,7 +415,11 @@ public class StorageManager {
                         final OfflinePlayer owner = Bukkit.getOfflinePlayer(region.getOwner());
                         final Economy economy = SimpleRegions.getEconomy();
                         if (economy.has(owner, region.getUpkeepCost())) {
-                            economy.withdrawPlayer(owner, region.getUpkeepCost());
+                            final DeductUpkeepEvent upkeepEvent = new DeductUpkeepEvent();
+                            Bukkit.getPluginManager().callEvent(upkeepEvent);
+                            if (!upkeepEvent.isEconomyInteractHandled()) {
+                                economy.withdrawPlayer(owner, region.getUpkeepCost());
+                            }
                             SimpleRegions.getStorageManager().resetUpkeep(region.getName());
                         }
                         else {

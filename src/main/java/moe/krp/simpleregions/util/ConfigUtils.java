@@ -25,6 +25,10 @@ public class ConfigUtils {
         return (regionDefinition) -> {
             boolean result;
 
+            if (player.hasPermission("SimpleRegions.*")) {
+                return true;
+            }
+
             if (player.hasPermission("SimpleRegions.denyInteract")) {
                 return false;
             }
