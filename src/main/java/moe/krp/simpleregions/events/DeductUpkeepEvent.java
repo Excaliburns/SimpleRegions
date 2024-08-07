@@ -7,6 +7,8 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
+
 public class DeductUpkeepEvent extends Event implements Cancellable {
     boolean canceled;
     HandlerList handlers;
@@ -14,10 +16,14 @@ public class DeductUpkeepEvent extends Event implements Cancellable {
     @Setter @Getter
     boolean economyInteractHandled;
 
-    public DeductUpkeepEvent() {
+    @Setter @Getter
+    BigDecimal upkeepCost;
+
+    public DeductUpkeepEvent(BigDecimal upkeepCost) {
         this.canceled = false;
         this.economyInteractHandled = false;
         this.handlers = new HandlerList();
+        this.upkeepCost = upkeepCost;
     }
 
 

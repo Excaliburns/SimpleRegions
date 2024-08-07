@@ -30,6 +30,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -415,9 +417,11 @@ public class StorageManager {
                         final OfflinePlayer owner = Bukkit.getOfflinePlayer(region.getOwner());
                         final Economy economy = SimpleRegions.getEconomy();
                         if (economy.has(owner, region.getUpkeepCost())) {
-                            final DeductUpkeepEvent upkeepEvent = new DeductUpkeepEvent();
+                            final DeductUpkeepEvent upkeepEvent = new DeductUpkeepEvent(
+                                    BigDecimal.valueOf(region.getUpkeepCost()).setScale(2, RoundingMode.DOWN)
+                            );
                             Bukkit.getPluginManager().callEvent(upkeepEvent);
-                            if (!upkeepEvent.isEconomyInteractHandled()) {
+                            if (!upkeepEvent.isEconomyInteractHandled() || !upkeepEvent.isCancelled()) {
                                 economy.withdrawPlayer(owner, region.getUpkeepCost());
                             }
                             SimpleRegions.getStorageManager().resetUpkeep(region.getName());
