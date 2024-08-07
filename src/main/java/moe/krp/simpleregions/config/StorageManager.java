@@ -423,7 +423,7 @@ public class StorageManager {
                         );
                         Bukkit.getPluginManager().callEvent(preUpkeepCostCheckEvent);
                         if (preUpkeepCostCheckEvent.isHasEnough()) {
-                            final DeductUpkeepEvent upkeepEvent = new DeductUpkeepEvent(cost);
+                            final DeductUpkeepEvent upkeepEvent = new DeductUpkeepEvent(cost, owner);
                             Bukkit.getPluginManager().callEvent(upkeepEvent);
                             if (!upkeepEvent.isEconomyInteractHandled() || !upkeepEvent.isCancelled()) {
                                 economy.withdrawPlayer(owner, region.getUpkeepCost());
