@@ -21,7 +21,7 @@ plugins {
 }
 
 group = 'moe.krp'
-version = '1.3.4'
+version = '1.3.5'
 
 repositories {
     mavenCentral()
@@ -119,12 +119,18 @@ jreleaser {
     }
 }
 
+jar.dependsOn shadowJar
+
 publishing {
     publications {
         maven(MavenPublication) {
             groupId = 'moe.krp'
             artifactId = 'SimpleRegions'
-            from components.java
+            artifacts {
+                artifact shadowJar
+                artifact sourcesJar
+                artifact javadocJar
+            }
 
             pom {
                 name = 'SimpleRegions'
