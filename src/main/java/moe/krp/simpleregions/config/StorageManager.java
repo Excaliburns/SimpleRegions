@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.sk89q.worldedit.regions.Region;
 import moe.krp.simpleregions.SimpleRegions;
 import moe.krp.simpleregions.events.DeductUpkeepEvent;
+import moe.krp.simpleregions.events.PreUpkeepCostCheckEvent;
 import moe.krp.simpleregions.helpers.RegionDefinition;
 import moe.krp.simpleregions.helpers.SignDefinition;
 import moe.krp.simpleregions.helpers.Vec3D;
@@ -414,12 +415,15 @@ public class StorageManager {
                 if (region.getUpkeepInterval() != null) {
                     final Duration newRegionUpkeepDuration = region.tickDownTime(duration);
                     if (newRegionUpkeepDuration.isNegative() || newRegionUpkeepDuration.isZero()) {
+                        final BigDecimal cost = BigDecimal.valueOf(region.getUpkeepCost()).setScale(2, RoundingMode.DOWN);
                         final OfflinePlayer owner = Bukkit.getOfflinePlayer(region.getOwner());
                         final Economy economy = SimpleRegions.getEconomy();
-                        if (economy.has(owner, region.getUpkeepCost())) {
-                            final DeductUpkeepEvent upkeepEvent = new DeductUpkeepEvent(
-                                    BigDecimal.valueOf(region.getUpkeepCost()).setScale(2, RoundingMode.DOWN)
-                            );
+                        final PreUpkeepCostCheckEvent preUpkeepCostCheckEvent = new PreUpkeepCostCheckEvent(
+                                cost, owner, economy.has(owner, cost.doubleValue())
+                        );
+                        Bukkit.getPluginManager().callEvent(preUpkeepCostCheckEvent);
+                        if (preUpkeepCostCheckEvent.isHasEnough()) {
+                            final DeductUpkeepEvent upkeepEvent = new DeductUpkeepEvent(cost);
                             Bukkit.getPluginManager().callEvent(upkeepEvent);
                             if (!upkeepEvent.isEconomyInteractHandled() || !upkeepEvent.isCancelled()) {
                                 economy.withdrawPlayer(owner, region.getUpkeepCost());
