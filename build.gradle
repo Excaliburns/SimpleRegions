@@ -16,10 +16,12 @@ buildscript {
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'org.jreleaser' version '1.13.1'
+    id 'maven-publish'
 }
 
 group = 'moe.krp'
-version = '1.3.3'
+version = '1.3.4'
 
 repositories {
     mavenCentral()
@@ -61,6 +63,8 @@ shadowJar {
     }
 
     relocate 'net.wsjd.anvilgui', 'moe.krp.anvilgui'
+
+    archiveClassifier.set('')
 }
 
 def targetJavaVersion = 17
@@ -71,6 +75,13 @@ java {
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
+
+    withJavadocJar()
+    withSourcesJar()
+}
+
+jar {
+    dependsOn shadowJar
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -87,5 +98,63 @@ processResources {
     filteringCharset 'UTF-8'
     filesMatching('plugin.yml') {
         expand props
+    }
+}
+
+jreleaser {
+    signing {
+        active = 'ALWAYS'
+        armored = true
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'moe.krp'
+            artifactId = 'SimpleRegions'
+            from components.java
+
+            pom {
+                name = 'SimpleRegions'
+                description = 'Manage plots of land in your server easily with this Paper plugin'
+                url = 'https://github.com/Excaliburns/SimpleRegions'
+                inceptionYear ='2024'
+                licenses {
+                    license {
+                        name = 'Apache-2.0'
+                        url = 'https://spdx.org/licenses/Apache-2.0.html'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'excaliburns'
+                        name = 'Kevin | Tut'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/Excaliburns/SimpleRegions.git'
+                    developerConnection = 'scm:git:ssh://github.com/Excaliburns/SimpleRegions.git'
+                    url = 'https://github.com/Excaliburns/SimpleRegions'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
     }
 }
