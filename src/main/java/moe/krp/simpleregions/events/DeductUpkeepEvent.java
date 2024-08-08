@@ -11,9 +11,10 @@ import org.jetbrains.annotations.NotNull;
 import java.math.BigDecimal;
 
 public class DeductUpkeepEvent extends Event implements Cancellable {
-    boolean canceled;
-    static final HandlerList handlers = new HandlerList();
+    @Getter
+    static final HandlerList handlerList = new HandlerList();
 
+    boolean canceled;
     @Setter @Getter
     boolean economyInteractHandled;
     @Setter @Getter
@@ -31,7 +32,7 @@ public class DeductUpkeepEvent extends Event implements Cancellable {
 
     @Override
     public @NotNull HandlerList getHandlers() {
-        return handlers;
+        return handlerList;
     }
 
     @Override

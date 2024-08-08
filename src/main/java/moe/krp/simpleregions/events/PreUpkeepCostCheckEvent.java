@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.math.BigDecimal;
 
 public class PreUpkeepCostCheckEvent extends Event {
+    @Getter
     static final HandlerList handlerList = new HandlerList();
 
     @Getter @Setter
