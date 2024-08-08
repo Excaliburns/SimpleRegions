@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.math.BigDecimal;
 
 public class PreUpkeepCostCheckEvent extends Event {
-    final HandlerList handlerList;
+    static final HandlerList handlerList = new HandlerList();
 
     @Getter @Setter
     BigDecimal cost;
@@ -24,7 +24,6 @@ public class PreUpkeepCostCheckEvent extends Event {
             final OfflinePlayer player,
             final boolean hasEnough
     ) {
-        this.handlerList = new HandlerList();
         this.cost = initialCost;
         this.player = player;
         this.hasEnough = hasEnough;

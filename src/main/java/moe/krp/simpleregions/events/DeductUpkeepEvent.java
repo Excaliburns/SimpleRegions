@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 
 public class DeductUpkeepEvent extends Event implements Cancellable {
     boolean canceled;
-    HandlerList handlers;
+    static final HandlerList handlers = new HandlerList();
 
     @Setter @Getter
     boolean economyInteractHandled;
@@ -24,7 +24,6 @@ public class DeductUpkeepEvent extends Event implements Cancellable {
     public DeductUpkeepEvent(BigDecimal upkeepCost, OfflinePlayer player) {
         this.canceled = false;
         this.economyInteractHandled = false;
-        this.handlers = new HandlerList();
         this.upkeepCost = upkeepCost;
         this.player = player;
     }
