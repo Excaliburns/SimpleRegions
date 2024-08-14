@@ -57,7 +57,7 @@ public class RegionDefinition {
     public void setConfiguration(final String regionType) {
         this.configuration = ConfigUtils.getRegionTypeConfiguration(regionType);
         if (configuration.getUpkeepInterval() != null) {
-            if (this.upkeepTimer == null) {
+            if (this.upkeepTimer == null || this.upkeepTimer.isBlank()) {
                 this.upkeepTimer = TimeUtils.getTimeStringFromDuration(configuration.getUpkeepInterval());
             }
         }
