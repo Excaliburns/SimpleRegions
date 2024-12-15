@@ -53,13 +53,13 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
     implementation 'com.github.hamza-cskn.obliviate-invs:core:4.3.0'
-    implementation 'net.wesjd:anvilgui:1.9.4-SNAPSHOT'
+    implementation 'net.wesjd:anvilgui:1.10.4-SNAPSHOT'
 }
 
 shadowJar {
     dependencies {
-        include dependency('com.github.hamza-cskn.obliviate-invs:core:4.3.0')
-        include dependency('net.wesjd:anvilgui:1.9.4-SNAPSHOT')
+        include dependency('com.github.hamza-cskn.obliviate-invs:core')
+        include dependency('net.wesjd:anvilgui')
     }
 
     relocate 'mc.obliviate', 'moe.krp.obliviate'
